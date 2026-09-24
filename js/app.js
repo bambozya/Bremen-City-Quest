@@ -382,6 +382,7 @@
   // ---------- boot ----------
   try { Sfx.set(localStorage.getItem(SOUND_KEY) === "1"); } catch (e) { /* ignore */ }
   els.menuGhost.innerHTML = Pixel.svg("ghost", 40);
+  els.arrow.innerHTML = Pixel.svg("arrow", 48);
   setMood("");
   var save = loadSave();
   if (save && save.state) engine.state.devMode = !!save.state.devMode;

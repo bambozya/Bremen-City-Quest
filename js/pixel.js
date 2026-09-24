@@ -17,7 +17,9 @@
     L: "#f2d5a0", // light bread / skin
     K: "#2b1d12", // hair
     S: "#6fcf97", // green
-    b: "#6aa9ff"
+    b: "#6aa9ff",
+    A: "#ff4d45", // arrow
+    a: "#ffb3ae"  // arrow highlight
   };
 
   var ghostBase = [
@@ -137,6 +139,22 @@
       "..BBBBBBBB..",
       "...BB..BB...",
       "............"
+    ],
+    arrow: [
+      "......AA......",
+      ".....AAAA.....",
+      "....AAaaAA....",
+      "...AAAaaAAA...",
+      "..AAAAaaAAAA..",
+      ".AAAAAaaAAAAA.",
+      "AAAAAAaaAAAAAA",
+      ".....AAaA.....",
+      ".....AAaA.....",
+      ".....AAaA.....",
+      ".....AAaA.....",
+      ".....AAaA.....",
+      ".....AAAA.....",
+      ".....AAAA....."
     ],
     pin: [
       "....RRRR....",
