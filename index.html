@@ -3,41 +3,48 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#b9cbdc">
+  <meta name="theme-color" content="#0b0f14">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>Bremen City Quest</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/logo.png">
   <link rel="apple-touch-icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header class="header">
     <img class="logo" src="assets/logo.png" alt="City Quest Bremen">
-    <button id="btnMenu" class="btn-icon" type="button" aria-label="Menu">☰</button>
+    <button id="btnMenu" class="btn-icon" type="button" aria-label="Menu">≡</button>
   </header>
 
   <div id="status" class="status">
-    <span id="statusRoom">—</span>
+    <div class="status-left">
+      <div id="statusRoom" class="status-room">—</div>
+      <div id="progress" class="progress" aria-label="Progress"></div>
+    </div>
+    <div id="statusItems" class="status-items" title="Items"></div>
     <span id="statusDev" class="badge hidden">DEV</span>
-    <span id="statusItems" class="status-items" title="Items"></span>
+    <div id="companion" class="companion" aria-hidden="true"></div>
   </div>
 
   <section id="travel" class="travel hidden">
     <div class="travel-row">
-      <div class="compass"><div id="arrow" class="arrow">➤</div></div>
+      <div class="compass"><div id="arrow" class="arrow">▲</div></div>
       <div class="travel-info">
-        <div class="travel-label">Go to</div>
+        <div class="travel-label">▸ Go to</div>
         <div id="travelTarget" class="travel-target">—</div>
         <div id="travelDistance" class="travel-distance">Waiting for GPS…</div>
         <div id="travelNote" class="travel-note"></div>
       </div>
     </div>
     <div class="travel-actions">
-      <a id="travelMaps" class="btn btn-secondary" href="#" target="_blank" rel="noopener">Open in Maps</a>
-      <button id="btnCompass" class="btn btn-secondary" type="button">Enable compass</button>
-      <button id="btnTeleport" class="btn btn-dev hidden" type="button">I’m here (dev)</button>
+      <a id="travelMaps" class="btn btn-secondary" href="#" target="_blank" rel="noopener">Maps</a>
+      <button id="btnCompass" class="btn btn-secondary" type="button">Compass</button>
+      <button id="btnTeleport" class="btn btn-dev hidden" type="button">I’m here</button>
     </div>
   </section>
 
@@ -52,28 +59,40 @@
       <button class="chip" type="button" data-say="look">Look</button>
     </div>
     <form id="form" class="input-row" autocomplete="off">
-      <input id="input" type="text" placeholder="Answer the ghost…" autocapitalize="off" autocorrect="off" spellcheck="false">
-      <button class="btn btn-primary" type="submit">Send</button>
+      <span class="prompt">&gt;</span>
+      <input id="input" type="text" placeholder="type your answer_" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <button class="btn btn-primary" type="submit">GO</button>
     </form>
   </footer>
 
   <div id="menu" class="overlay">
     <div class="menu">
       <img class="menu-logo" src="assets/logo.png" alt="">
-      <p class="menu-tagline">A location-based text adventure through the old town of Bremen.</p>
-      <button id="btnContinue" class="btn btn-primary hidden" type="button">Continue</button>
-      <button id="btnNew" class="btn btn-primary" type="button">New game</button>
+      <div class="menu-title">
+        <span id="menuGhost" class="menu-ghost"></span>
+        <div>
+          <div class="menu-heading">BREMEN CITY QUEST</div>
+          <div class="menu-sub">a location-based text adventure</div>
+        </div>
+      </div>
+      <button id="btnContinue" class="btn btn-primary hidden" type="button">▶ Continue</button>
+      <button id="btnNew" class="btn btn-primary" type="button">▶ New game</button>
+      <label class="toggle">
+        <input id="chkSound" type="checkbox">
+        <span>Sound effects</span>
+      </label>
       <label class="toggle">
         <input id="chkDev" type="checkbox">
         <span>Developer mode (skip GPS, <code>goto n</code>)</span>
       </label>
-      <p class="menu-help">Start at the city centre. Follow the compass to each point and answer the ghost with keywords. Type <b>help</b> at any time.</p>
+      <p class="menu-help">Start in the city centre. Follow the compass to each point and answer the ghost with keywords. Type <b>help</b> at any time. Tap a message to skip the typing.</p>
       <button id="btnClose" class="btn btn-secondary" type="button">Close</button>
       <p class="menu-credits">Original concept 2012: D. Davydenkova, S. Kozuhovskij, Y. Maslout, P. Szmidt.</p>
     </div>
   </div>
 
   <script src="data/story.js"></script>
+  <script src="js/pixel.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/geo.js"></script>
   <script src="js/app.js"></script>
