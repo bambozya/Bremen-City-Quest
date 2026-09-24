@@ -1,0 +1,10 @@
+{
+  "name": "Bremen City Quest",
+  "short_name": "CityQuest",
+  "description": "A location-based text adventure through the old town of Bremen.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#14171c",
+  "theme_color": "#b9cbdc",
+  "icons": [{ "src": "assets/logo.png", "sizes": "480x139", "type": "image/png" }]
+}
