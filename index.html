@@ -12,13 +12,13 @@
   <link rel="apple-touch-icon" href="assets/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header class="header">
     <img class="logo" src="assets/logo.png" alt="City Quest Bremen">
-    <button id="btnMenu" class="btn-icon" type="button" aria-label="Menu">≡</button>
+    <button id="btnMenu" class="btn-icon" type="button" aria-label="Menu and settings">≡</button>
   </header>
 
   <div id="status" class="status">
@@ -60,7 +60,7 @@
     </div>
     <form id="form" class="input-row" autocomplete="off">
       <span class="prompt">&gt;</span>
-      <input id="input" type="text" placeholder="type your answer_" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <input id="input" type="text" aria-label="Your answer" placeholder="type your answer" autocapitalize="off" autocorrect="off" spellcheck="false">
       <button class="btn btn-primary" type="submit">GO</button>
     </form>
   </footer>
@@ -77,6 +77,19 @@
       </div>
       <button id="btnContinue" class="btn btn-primary hidden" type="button">▶ Continue</button>
       <button id="btnNew" class="btn btn-primary" type="button">▶ New game</button>
+      <div class="menu-section">Settings</div>
+      <label class="toggle">
+        <input id="chkLarge" type="checkbox">
+        <span>Large text</span>
+      </label>
+      <label class="toggle">
+        <input id="chkTypewriter" type="checkbox">
+        <span>Typewriter effect for the ghost</span>
+      </label>
+      <label class="toggle">
+        <input id="chkCrt" type="checkbox">
+        <span>CRT scanlines</span>
+      </label>
       <label class="toggle">
         <input id="chkSound" type="checkbox">
         <span>Sound effects</span>

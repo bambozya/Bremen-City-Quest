@@ -4,6 +4,17 @@
 
   var SAVE_KEY = "bcq.save.v1";
   var SOUND_KEY = "bcq.sound";
+  var SETTINGS_KEY = "bcq.settings";
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var settings = { large: false, typewriter: !reduceMotion, crt: false };
+  try { var sv = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null"); if (sv) for (var sk in sv) settings[sk] = sv[sk]; } catch (e) { /* ignore */ }
+  function applySettings() {
+    var h = document.documentElement;
+    if (settings.large) h.setAttribute("data-large", ""); else h.removeAttribute("data-large");
+    if (settings.crt) h.setAttribute("data-crt", ""); else h.removeAttribute("data-crt");
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) { /* ignore */ }
+  }
+  applySettings();
   var TYPE_MS = 14;            // ms per character for ghost lines
   var $ = function (id) { return document.getElementById(id); };
 
@@ -15,7 +26,8 @@
     travelDistance: $("travelDistance"), travelNote: $("travelNote"), travelMaps: $("travelMaps"),
     btnCompass: $("btnCompass"), btnTeleport: $("btnTeleport"),
     menu: $("menu"), btnMenu: $("btnMenu"), btnClose: $("btnClose"),
-    btnNew: $("btnNew"), btnContinue: $("btnContinue"), chkDev: $("chkDev"), chkSound: $("chkSound")
+    btnNew: $("btnNew"), btnContinue: $("btnContinue"), chkDev: $("chkDev"), chkSound: $("chkSound"),
+    chkLarge: $("chkLarge"), chkTypewriter: $("chkTypewriter"), chkCrt: $("chkCrt")
   };
 
   var transcript = [];
@@ -86,7 +98,7 @@
       row.appendChild(bubble);
       els.log.appendChild(row);
       scrollLog();
-      if (it.instant) { body.textContent = it.text; afterRender(0); return; }
+      if (it.instant || !settings.typewriter) { body.textContent = it.text; if (!it.instant) Sfx.talk(); afterRender(it.instant ? 0 : 250); return; }
       Sfx.talk();
       bubble.classList.add("typing");
       var i = 0, text = it.text;
@@ -292,6 +304,9 @@
     els.btnContinue.classList.toggle("hidden", !resumable);
     els.chkDev.checked = !!engine.state.devMode;
     els.chkSound.checked = Sfx.get();
+    els.chkLarge.checked = settings.large;
+    els.chkTypewriter.checked = settings.typewriter;
+    els.chkCrt.checked = settings.crt;
     els.menu.classList.remove("hidden");
   }
   function closeMenu() { els.menu.classList.add("hidden"); }
@@ -299,6 +314,9 @@
   els.btnMenu.addEventListener("click", openMenu);
   els.btnClose.addEventListener("click", closeMenu);
   els.chkDev.addEventListener("change", function () { engine.state.devMode = els.chkDev.checked; renderStatus(); persist(); });
+  els.chkLarge.addEventListener("change", function () { settings.large = els.chkLarge.checked; applySettings(); });
+  els.chkTypewriter.addEventListener("change", function () { settings.typewriter = els.chkTypewriter.checked; applySettings(); });
+  els.chkCrt.addEventListener("change", function () { settings.crt = els.chkCrt.checked; applySettings(); });
   els.chkSound.addEventListener("change", function () {
     Sfx.set(els.chkSound.checked);
     try { localStorage.setItem(SOUND_KEY, els.chkSound.checked ? "1" : "0"); } catch (e) { /* ignore */ }
