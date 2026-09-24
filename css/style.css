@@ -20,7 +20,6 @@
   --font-pixel: "Press Start 2P", "Courier New", monospace;
   --fs: 18px;
 }
-html[data-large] { --fs: 21px; }
 
 * { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -35,13 +34,6 @@ body {
   flex-direction: column;
   height: 100dvh;
   overflow: hidden;
-}
-
-/* optional CRT scanlines (off by default) */
-html[data-crt] body::after {
-  content: "";
-  position: fixed; inset: 0; pointer-events: none; z-index: 50;
-  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .10) 0 1px, transparent 1px 4px);
 }
 
 .hidden { display: none !important; }
