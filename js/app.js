@@ -163,7 +163,7 @@
   function renderStatus() {
     var r = engine.currentRoom();
     var s = engine.state;
-    els.statusRoom.textContent = r ? "PT " + r.id + " · " + r.title.toUpperCase() : "—";
+    els.statusRoom.textContent = r ? r.title : "—";
     els.statusDev.classList.toggle("hidden", !s.devMode);
     els.btnTeleport.classList.toggle("hidden", !s.devMode);
     // progress: rooms 1..9

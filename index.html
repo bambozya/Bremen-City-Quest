@@ -3,25 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0b0f14">
+  <meta name="theme-color" content="#131b27">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>Bremen City Quest</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="assets/logo.png">
-  <link rel="apple-touch-icon" href="assets/logo.png">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header class="header">
-    <img class="logo" src="assets/logo.png" alt="City Quest Bremen">
-    <button id="btnMenu" class="btn-icon" type="button" aria-label="Menu and settings">≡</button>
-  </header>
-
-  <div id="status" class="status">
+  <header id="status" class="status">
+    <img class="app-icon" src="assets/favicon.svg" alt="" width="32" height="32">
     <div class="status-left">
       <div id="statusRoom" class="status-room">—</div>
       <div id="progress" class="progress" aria-label="Progress"></div>
@@ -29,7 +26,8 @@
     <div id="statusItems" class="status-items" title="Items"></div>
     <span id="statusDev" class="badge hidden">DEV</span>
     <div id="companion" class="companion" aria-hidden="true"></div>
-  </div>
+    <button id="btnMenu" class="btn-icon" type="button" aria-label="Menu and settings">≡</button>
+  </header>
 
   <section id="travel" class="travel hidden">
     <div class="travel-row">
