@@ -15,10 +15,10 @@ python3 -m http.server 8000
 
 To test on a phone, host the folder on any HTTPS static host (GitHub Pages works) or use a tunnel such as `ngrok`.
 
-- Answer the ghost with keywords: `yes`, `9`, `Roland`, `take`…
-- Commands: `help`, `hint`, `items`, `look`, `where`
+- Answer the ghost by tapping one of the options. A wrong option is crossed out and the ghost gives a hint.
+- Tap a message to skip the typing. Tap the ghost in the header to poke it.
 - Progress is saved automatically in the browser.
-- **Developer mode** (menu): skips the GPS check with an *I'm here* button and enables `goto <n>` to jump to any point.
+- **Developer mode** (menu): skips the GPS check with an *I'm here* button and adds a *Jump to point* dropdown.
 
 ## Structure
 
@@ -50,7 +50,7 @@ Coordinates in `data/story.js` are approximate and the radii (35–45 m) should 
 
 ## Editing the story
 
-Everything lives in `data/story.js`. Each room has `steps`; an `ask` step lists accepted keywords (matched case-insensitively, umlauts folded, number words understood) and a list of hints that cycle on wrong answers. Answers can grant or remove items, retry the question, or end the game.
+Everything lives in `data/story.js`. Each room has `steps`; an `ask` step has `choices` (the buttons shown, 2–4 options), `answers` with accepted keywords (matched case-insensitively, umlauts folded, number words understood) and `hints` that cycle on wrong answers. A choice is correct when it matches one of the answers' keywords, so keep the two in sync. Answers can grant or remove items, retry the question, or end the game.
 
 ## Credits
 

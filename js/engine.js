@@ -44,6 +44,7 @@
       arrived: false,
       items: [],
       hintIdx: {},
+      tried: {},
       wrong: 0,
       gameOver: false,
       finished: false,
@@ -185,6 +186,17 @@
     }
   };
 
+  /* Choices for the pending question: [{label, tried}]. Empty if no question is pending. */
+  Engine.prototype.pendingChoices = function () {
+    var step = this.currentStep();
+    if (this.needsTravel() || !step || step.type !== "ask" || this.state.gameOver || this.state.finished) return [];
+    var tried = this.state.tried[this.hintKey()] || [];
+    var labels = step.choices || (step.answers || []).map(function (a) { return a.match[0]; });
+    return labels.map(function (label) {
+      return { label: label, tried: tried.indexOf(normalize(label)) !== -1 };
+    });
+  };
+
   /* The answers of the pending question, for quick-reply buttons. Empty if none. */
   Engine.prototype.pendingAnswers = function () {
     var step = this.currentStep();
@@ -270,8 +282,11 @@
       return true;
     }
 
-    // wrong answer -> hint
+    // wrong answer -> remember it (so a choice can be crossed out) and give a hint
     s.wrong += 1;
+    var key = this.hintKey();
+    if (!s.tried[key]) s.tried[key] = [];
+    if (s.tried[key].indexOf(cmd) === -1) s.tried[key].push(cmd);
     this.giveHint();
     return true;
   };

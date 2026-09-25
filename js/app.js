@@ -9,10 +9,9 @@
   var $ = function (id) { return document.getElementById(id); };
 
   var els = {
-    log: $("log"), form: $("form"), input: $("input"), inputRow: document.querySelector(".input-row"),
+    log: $("log"), choices: $("choices"), gotoRow: $("gotoRow"), selGoto: $("selGoto"),
     statusRoom: $("statusRoom"), statusDev: $("statusDev"), statusItems: $("statusItems"),
     progress: $("progress"), companion: $("companion"), cat: $("cat"), menuGhost: $("menuGhost"),
-    quickAnswers: $("quickAnswers"),
     travel: $("travel"), arrow: $("arrow"), travelTarget: $("travelTarget"),
     travelDistance: $("travelDistance"), travelNote: $("travelNote"), travelMaps: $("travelMaps"),
     btnCompass: $("btnCompass"), btnTeleport: $("btnTeleport"),
@@ -59,10 +58,18 @@
     requestAnimationFrame(function () { els.log.scrollTop = els.log.scrollHeight; });
   }
 
-  function enqueue(item) { queue.push(item); pump(); }
+  /* While messages are queued or typing, choices are hidden and the pokeable sprites are disabled. */
+  function setBusy(busy) {
+    els.choices.classList.toggle("waiting", busy);
+    els.companion.disabled = busy;
+    els.cat.disabled = busy;
+  }
+
+  function enqueue(item) { queue.push(item); setBusy(true); pump(); }
 
   function pump() {
-    if (typing || pumpTimer || !queue.length) return;
+    if (typing || pumpTimer) return;
+    if (!queue.length) { setBusy(false); scrollLog(); return; }
     render(queue.shift());
   }
 
@@ -224,6 +231,7 @@
   ];
   var pokes = 0;
   els.companion.addEventListener("click", function () {
+    if (typing || queue.length || pumpTimer) return; // no poking while the ghost is talking
     pokes++;
     var text;
     if (pokes % 5 === 0) text = "Enough. I’m sulking now.";
@@ -233,6 +241,7 @@
   });
 
   els.cat.addEventListener("click", function () {
+    if (typing || queue.length || pumpTimer) return;
     Sfx.meow();
     els.cat.classList.remove("happy"); void els.cat.offsetWidth; els.cat.classList.add("happy");
     enqueue({ kind: "text", text: "The cat looks at you. Meow." });
@@ -245,28 +254,24 @@
     if (mood) setTimeout(function () { if (els.companion.classList.contains(mood)) setMood(""); }, 1600);
   }
 
-  function labelFor(answer) {
-    var k = answer.match[0];
-    return k.charAt(0).toUpperCase() + k.slice(1);
-  }
-
-  function renderChips() {
-    els.quickAnswers.innerHTML = "";
-    var answers = engine.pendingAnswers();
-    if (answers.length < 2) return; // free-text question: no answer chips (#14)
-    answers.forEach(function (a) {
+  function renderChoices() {
+    els.choices.innerHTML = "";
+    var choices = engine.pendingChoices();
+    choices.forEach(function (c) {
       var b = document.createElement("button");
-      b.type = "button"; b.className = "chip chip-answer"; b.textContent = labelFor(a);
-      b.setAttribute("data-say", a.match[0]);
-      b.addEventListener("click", function () { say(a.match[0]); els.input.focus(); });
-      els.quickAnswers.appendChild(b);
+      b.type = "button";
+      b.className = "choice" + (c.tried ? " tried" : "") + (choices.length === 1 ? " single" : "");
+      b.textContent = c.label;
+      if (c.tried) { b.disabled = true; b.setAttribute("aria-label", c.label + " (already tried)"); }
+      else b.addEventListener("click", function () { say(c.label); });
+      els.choices.appendChild(b);
     });
   }
 
   function renderStatus() {
     var r = engine.currentRoom();
     var s = engine.state;
-    els.statusRoom.textContent = r ? r.title : "—";
+    els.statusRoom.textContent = s.finished ? "The End" : r ? r.title : "—";
     els.statusDev.classList.toggle("hidden", !s.devMode);
     els.btnTeleport.classList.toggle("hidden", !s.devMode);
     var html = "";
@@ -282,8 +287,8 @@
     // the cat joins after the Marktplatz (#15)
     var catAround = s.room >= 5 && !s.gameOver;
     els.cat.classList.toggle("hidden", !catAround);
-    if (catAround && !els.cat.innerHTML) els.cat.innerHTML = Pixel.svg("cat", 32);
-    renderChips();
+    if (catAround && !els.cat.innerHTML) els.cat.innerHTML = Pixel.svg("cat", 36);
+    renderChoices();
   }
 
   // ---------- travel ----------
@@ -404,6 +409,8 @@
     var resumable = save && save.state && !save.state.finished && !save.state.gameOver;
     els.btnContinue.classList.toggle("hidden", !resumable);
     els.chkDev.checked = !!engine.state.devMode;
+    els.gotoRow.classList.toggle("hidden", !engine.state.devMode);
+    els.selGoto.value = engine.state.room;
     els.chkSound.checked = Sfx.get();
     els.menu.classList.remove("hidden");
   }
@@ -411,7 +418,7 @@
 
   els.btnMenu.addEventListener("click", openMenu);
   els.btnClose.addEventListener("click", closeMenu);
-  els.chkDev.addEventListener("change", function () { engine.state.devMode = els.chkDev.checked; renderStatus(); persist(); });
+  els.chkDev.addEventListener("change", function () { engine.state.devMode = els.chkDev.checked; els.gotoRow.classList.toggle("hidden", !els.chkDev.checked); renderStatus(); persist(); });
   els.chkSound.addEventListener("change", function () {
     Sfx.set(els.chkSound.checked);
     try { localStorage.setItem(SOUND_KEY, els.chkSound.checked ? "1" : "0"); } catch (e) { /* ignore */ }
@@ -443,7 +450,6 @@
     renderStatus();
     persist();
     closeMenu();
-    els.input.focus();
   }
 
   els.btnNew.addEventListener("click", newGame);
@@ -454,21 +460,23 @@
     flush();
     els.log.innerHTML = "";
     transcript = save.transcript || [];
+    els.log.classList.add("restoring");
     transcript.forEach(function (m) { render({ kind: m.kind, text: m.text, hint: m.hint, item: m.item, gained: m.gained, instant: true }); });
+    els.log.classList.remove("restoring");
     engine.load(save.state);
     enqueue({ kind: "system", text: "— game resumed —", instant: true });
     if (engine.needsTravel()) showTravel(engine.currentRoom());
     renderStatus();
     closeMenu();
-    els.input.focus();
+    pump();
   });
 
   // ---------- input ----------
   function feedback(cls) {
-    els.inputRow.classList.remove("ok", "bad");
-    void els.inputRow.offsetWidth;
-    els.inputRow.classList.add(cls);
-    setTimeout(function () { els.inputRow.classList.remove(cls); }, 700);
+    els.choices.classList.remove("ok", "bad");
+    void els.choices.offsetWidth;
+    els.choices.classList.add(cls);
+    setTimeout(function () { els.choices.classList.remove(cls); }, 700);
   }
 
   function say(text) {
@@ -480,21 +488,26 @@
     engine.input(text);
     var s = engine.state;
     var after = s.room + ":" + s.step;
-    var isCommand = /^(help|\?|hilfe|hint|tipp|clue|items|inventory|inv|i|look|l|repeat|where|wo|goto( .*)?)$/i.test(text.trim());
+    var isCommand = /^goto( .*)?$/i.test(text.trim());
     if (pendingRoom && !engine.needsTravel()) hideTravel(); // e.g. after goto
     if (s.gameOver) { setMood("angry"); Sfx.bad(); }
     else if (!isCommand && (after !== before || s.finished || s.items.length !== itemsBefore)) { feedback("ok"); setMood("happy"); Sfx.ok(); }
     else if (!isCommand && lastWasHint) { feedback("bad"); setMood("angry"); Sfx.bad(); }
     persist();
     renderStatus();
-    els.input.value = "";
   }
 
-  els.form.addEventListener("submit", function (e) { e.preventDefault(); say(els.input.value.trim()); });
-  Array.prototype.forEach.call(document.querySelectorAll(".chip:not(.chip-answer)"), function (chip) {
-    chip.addEventListener("click", function () { say(chip.getAttribute("data-say")); els.input.focus(); });
-  });
   els.log.addEventListener("click", function () { if (typing) typing.finish(); });
+
+  // dev: jump to a point from the menu
+  STORY.rooms.forEach(function (r) {
+    var o = document.createElement("option"); o.value = r.id; o.textContent = r.id + " · " + r.title; els.selGoto.appendChild(o);
+  });
+  els.selGoto.addEventListener("change", function () {
+    if (!engine.state.devMode) return;
+    closeMenu();
+    say("goto " + els.selGoto.value);
+  });
 
   // ---------- boot ----------
   try { Sfx.set(localStorage.getItem(SOUND_KEY) === "1"); } catch (e) { /* ignore */ }

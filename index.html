@@ -50,17 +50,7 @@
   <main id="log" class="log" aria-live="polite"></main>
 
   <footer class="footer">
-    <div id="quick" class="quick">
-      <span id="quickAnswers" class="quick-answers"></span>
-      <button class="chip" type="button" data-say="hint">Hint</button>
-      <button class="chip" type="button" data-say="items">Items</button>
-      <button class="chip" type="button" data-say="look">Look</button>
-    </div>
-    <form id="form" class="input-row" autocomplete="off">
-      <span class="prompt">&gt;</span>
-      <input id="input" type="text" aria-label="Your answer" placeholder="type your answer" autocapitalize="off" autocorrect="off" spellcheck="false">
-      <button class="btn btn-primary" type="submit">GO</button>
-    </form>
+    <div id="choices" class="choices" role="group" aria-label="Your answer"></div>
   </footer>
 
   <div id="menu" class="overlay">
@@ -82,9 +72,13 @@
       </label>
       <label class="toggle">
         <input id="chkDev" type="checkbox">
-        <span>Developer mode (skip GPS, <code>goto n</code>)</span>
+        <span>Developer mode (skip GPS)</span>
       </label>
-      <p class="menu-help">Start in the city centre. Follow the compass to each point and answer the ghost with keywords. Type <b>help</b> at any time. Tap a message to skip the typing.</p>
+      <label id="gotoRow" class="toggle hidden">
+        <span>Jump to point</span>
+        <select id="selGoto" class="select"></select>
+      </label>
+      <p class="menu-help">Start in the city centre. Follow the compass to each point and answer the ghost by tapping one of the options. Tap a message to skip the typing.</p>
       <button id="btnClose" class="btn btn-secondary" type="button">Close</button>
       <p class="menu-credits">Original concept 2012: D. Davydenkova, S. Kozuhovskij, Y. Maslout, P. Szmidt.</p>
     </div>
