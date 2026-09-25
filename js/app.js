@@ -4,14 +4,15 @@
 
   var SAVE_KEY = "bcq.save.v1";
   var SOUND_KEY = "bcq.sound";
-
-  var TYPE_MS = 14;            // ms per character for ghost lines
+  var TYPE_MS = 14;          // ms per character, ghost lines
+  var NARRATE_MS = 8;        // ms per character, narration
   var $ = function (id) { return document.getElementById(id); };
 
   var els = {
     log: $("log"), form: $("form"), input: $("input"), inputRow: document.querySelector(".input-row"),
     statusRoom: $("statusRoom"), statusDev: $("statusDev"), statusItems: $("statusItems"),
-    progress: $("progress"), companion: $("companion"), menuGhost: $("menuGhost"),
+    progress: $("progress"), companion: $("companion"), cat: $("cat"), menuGhost: $("menuGhost"),
+    quickAnswers: $("quickAnswers"),
     travel: $("travel"), arrow: $("arrow"), travelTarget: $("travelTarget"),
     travelDistance: $("travelDistance"), travelNote: $("travelNote"), travelMaps: $("travelMaps"),
     btnCompass: $("btnCompass"), btnTeleport: $("btnTeleport"),
@@ -46,7 +47,8 @@
       ok: function () { tone(523, 0.08); tone(784, 0.12, 0.08); },
       bad: function () { tone(160, 0.18, 0, "sawtooth", 0.04); },
       item: function () { tone(523, 0.06); tone(659, 0.06, 0.06); tone(784, 0.06, 0.12); tone(1046, 0.14, 0.18); },
-      arrive: function () { tone(392, 0.08); tone(523, 0.08, 0.09); tone(659, 0.16, 0.18); }
+      arrive: function () { tone(392, 0.08); tone(523, 0.08, 0.09); tone(659, 0.16, 0.18); },
+      meow: function () { tone(880, 0.08, 0, "triangle", 0.06); tone(740, 0.14, 0.08, "triangle", 0.06); }
     };
   })();
 
@@ -61,63 +63,78 @@
 
   function pump() {
     if (typing || pumpTimer || !queue.length) return;
-    var it = queue.shift();
-    render(it);
+    render(queue.shift());
   }
 
   function afterRender(delay) {
-    if (delay) {
-      pumpTimer = setTimeout(function () { pumpTimer = null; pump(); }, delay);
-    } else {
-      pump();
+    if (delay) pumpTimer = setTimeout(function () { pumpTimer = null; pump(); }, delay);
+    else pump();
+  }
+
+  /* Reveal `text` inside `body` one character at a time. The full text is laid out
+   * (invisible) from the start so the bubble never changes height while typing. */
+  function typeInto(body, text, speed, onDone) {
+    body.innerHTML = "";
+    var typed = document.createElement("span"); typed.className = "typed";
+    var cursor = document.createElement("span"); cursor.className = "cursor"; cursor.textContent = "▮";
+    var untyped = document.createElement("span"); untyped.className = "untyped"; untyped.textContent = text;
+    body.appendChild(typed); body.appendChild(cursor); body.appendChild(untyped);
+    var i = 0, timer = null;
+    function finish() {
+      clearTimeout(timer);
+      body.textContent = text;
+      typing = null;
+      onDone();
     }
+    (function step() {
+      if (i >= text.length) { finish(); return; }
+      var ch = text[i++];
+      typed.textContent += ch;
+      untyped.textContent = text.slice(i);
+      var d = speed;
+      if (ch === "." || ch === "!" || ch === "?") d = 220; else if (ch === ",") d = 90; else if (ch === "\n") d = 160;
+      timer = setTimeout(step, d);
+    })();
+    typing = { finish: finish };
+  }
+
+  function makeRow(kind, avatarSprite) {
+    var row = document.createElement("div");
+    row.className = "row row-" + kind;
+    row.appendChild(Pixel.el(avatarSprite, 30, "avatar"));
+    return row;
   }
 
   function render(it) {
     var kind = it.kind;
+
     if (kind === "ghost") {
-      var row = document.createElement("div");
-      row.className = "row row-ghost";
-      row.appendChild(Pixel.el(it.hint ? "ghostAngry" : "ghost", 30, "avatar"));
+      var row = makeRow("ghost", it.hint ? "ghostAngry" : "ghost");
       var bubble = document.createElement("div");
       bubble.className = "msg msg-ghost pxbox" + (it.hint ? " msg-hint" : "");
-      var tag = document.createElement("span"); tag.className = "tag"; tag.textContent = it.hint ? "GHOST · HINT" : "GHOST";
-      var body = document.createElement("span"); body.className = "body";
-      bubble.appendChild(tag); bubble.appendChild(body);
       row.appendChild(bubble);
       els.log.appendChild(row);
       scrollLog();
-      if (it.instant) { body.textContent = it.text; afterRender(0); return; }
-      Sfx.talk();
-      bubble.classList.add("typing");
-      var i = 0, text = it.text;
-      typing = {
-        finish: function () {
-          clearTimeout(typing.timer);
-          body.textContent = text;
-          bubble.classList.remove("typing");
-          typing = null;
-          scrollLog();
-          afterRender(120);
-        }
-      };
-      (function step() {
-        if (i >= text.length) { typing.finish(); return; }
-        var ch = text[i++];
-        body.textContent += ch;
-        if (i % 8 === 0) scrollLog();
-        var d = TYPE_MS;
-        if (ch === "." || ch === "!" || ch === "?") d = 220; else if (ch === "," ) d = 90; else if (ch === "\n") d = 160;
-        typing.timer = setTimeout(step, d);
-      })();
-      bubble.addEventListener("click", function () { if (typing) typing.finish(); });
+      function fill(instant) {
+        bubble.innerHTML = "";
+        var tag = document.createElement("span"); tag.className = "tag"; tag.textContent = it.hint ? "GHOST · HINT" : "GHOST";
+        var body = document.createElement("span"); body.className = "body";
+        bubble.appendChild(tag); bubble.appendChild(body);
+        if (instant) { body.textContent = it.text; scrollLog(); afterRender(0); return; }
+        Sfx.talk();
+        typeInto(body, it.text, TYPE_MS, function () { afterRender(140); });
+        scrollLog();
+      }
+      if (it.instant) { fill(true); return; }
+      // typing indicator first (#12)
+      bubble.innerHTML = '<span class="dots"><i></i><i></i><i></i></span>';
+      var dotsTimer = setTimeout(function () { fill(false); }, 550);
+      typing = { finish: function () { clearTimeout(dotsTimer); typing = null; fill(true); } };
       return;
     }
 
     if (kind === "player") {
-      var prow = document.createElement("div");
-      prow.className = "row row-player";
-      prow.appendChild(Pixel.el("player", 30, "avatar"));
+      var prow = makeRow("player", "player");
       var pb = document.createElement("div"); pb.className = "msg msg-player pxbox"; pb.textContent = it.text;
       prow.appendChild(pb);
       els.log.appendChild(prow);
@@ -134,7 +151,32 @@
       els.log.appendChild(ib);
       scrollLog();
       if (!it.instant) Sfx.item();
-      afterRender(it.instant ? 0 : 250);
+      afterRender(it.instant ? 0 : 300);
+      return;
+    }
+
+    if (kind === "end") {
+      var card = document.createElement("div");
+      card.className = "msg msg-end pxbox" + (it.win ? " win" : "");
+      var t = document.createElement("div"); t.className = "end-title"; t.textContent = it.win ? "THE END" : "GAME OVER";
+      var sub = document.createElement("div"); sub.className = "end-sub";
+      sub.textContent = it.win ? "Thank you for playing Bremen City Quest." : "The ghost is not amused.";
+      var btn = document.createElement("button"); btn.type = "button"; btn.className = "btn btn-primary";
+      btn.textContent = it.win ? "▶ Play again" : "▶ Try again";
+      btn.addEventListener("click", newGame);
+      card.appendChild(t); card.appendChild(sub); card.appendChild(btn);
+      els.log.appendChild(card);
+      scrollLog();
+      afterRender(0);
+      return;
+    }
+
+    if (kind === "text" && !it.instant) {
+      var nd = document.createElement("div");
+      nd.className = "msg msg-text";
+      els.log.appendChild(nd);
+      scrollLog();
+      typeInto(nd, it.text, NARRATE_MS, function () { afterRender(Math.min(1800, 500 + it.text.length * 6)); });
       return;
     }
 
@@ -143,15 +185,58 @@
     div.textContent = it.text;
     els.log.appendChild(div);
     scrollLog();
-    afterRender(it.instant ? 0 : (it.delay || (kind === "text" ? 350 : 120)));
+    afterRender(it.instant ? 0 : (it.delay || 120));
   }
 
   /* Finish anything typing and render the rest immediately. */
   function flush() {
     if (pumpTimer) { clearTimeout(pumpTimer); pumpTimer = null; }
     if (typing) typing.finish();
-    while (queue.length) { var it = queue.shift(); it.instant = true; render(it); if (pumpTimer) { clearTimeout(pumpTimer); pumpTimer = null; } }
+    while (queue.length) {
+      var it = queue.shift(); it.instant = true; render(it);
+      if (pumpTimer) { clearTimeout(pumpTimer); pumpTimer = null; }
+    }
   }
+
+  // ---------- navigation help (#2, #3) ----------
+  function compassName(b) {
+    var names = ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"];
+    return names[Math.round(b / 45) % 8];
+  }
+
+  function navText(room) {
+    var loc = room.location;
+    if (!lastPos) return "You are not there yet. Next stop: " + loc.label + ". Waiting for GPS — follow the arrow or open Maps.";
+    var d = Geo.distance(lastPos, loc), b = Geo.bearing(lastPos, loc);
+    return "You are not there yet. " + loc.label + " is about " + Geo.formatDistance(d) + " to the " + compassName(b) + ". Follow the arrow.";
+  }
+
+  // ---------- companion + cat (#13, #15) ----------
+  var REMARKS = [
+    "Boo. Just kidding.",
+    "Stop poking me. I’m transparent, not intangible. Wait…",
+    "I have been dead for six hundred years. I can wait. You can’t.",
+    "Focus. There is a question waiting.",
+    "Did you know Roland has a spare in the cellar? Neither did he.",
+    "If you see the cat, don’t trust it. Or do. I’m a ghost, not your mother.",
+    "Every time you poke me, a pig in the Sögestraße oinks.",
+    "Yes? Do I have something on my face? I don’t have a face."
+  ];
+  var pokes = 0;
+  els.companion.addEventListener("click", function () {
+    pokes++;
+    var text;
+    if (pokes % 5 === 0) text = "Enough. I’m sulking now.";
+    else text = REMARKS[Math.floor(Math.random() * REMARKS.length)];
+    setMood(pokes % 5 === 0 ? "angry" : "happy");
+    enqueue({ kind: "ghost", text: text });
+  });
+
+  els.cat.addEventListener("click", function () {
+    Sfx.meow();
+    els.cat.classList.remove("happy"); void els.cat.offsetWidth; els.cat.classList.add("happy");
+    enqueue({ kind: "text", text: "The cat looks at you. Meow." });
+  });
 
   // ---------- status ----------
   function setMood(mood) {
@@ -160,24 +245,45 @@
     if (mood) setTimeout(function () { if (els.companion.classList.contains(mood)) setMood(""); }, 1600);
   }
 
+  function labelFor(answer) {
+    var k = answer.match[0];
+    return k.charAt(0).toUpperCase() + k.slice(1);
+  }
+
+  function renderChips() {
+    els.quickAnswers.innerHTML = "";
+    var answers = engine.pendingAnswers();
+    if (answers.length < 2) return; // free-text question: no answer chips (#14)
+    answers.forEach(function (a) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "chip chip-answer"; b.textContent = labelFor(a);
+      b.setAttribute("data-say", a.match[0]);
+      b.addEventListener("click", function () { say(a.match[0]); els.input.focus(); });
+      els.quickAnswers.appendChild(b);
+    });
+  }
+
   function renderStatus() {
     var r = engine.currentRoom();
     var s = engine.state;
     els.statusRoom.textContent = r ? r.title : "—";
     els.statusDev.classList.toggle("hidden", !s.devMode);
     els.btnTeleport.classList.toggle("hidden", !s.devMode);
-    // progress: rooms 1..9
     var html = "";
     for (var i = 1; i < STORY.rooms.length; i++) {
       var cls = i < s.room || s.finished ? "done" : i === s.room ? "now" : "";
       html += '<i class="' + cls + '"></i>';
     }
     els.progress.innerHTML = html;
-    // items as sprites
     els.statusItems.innerHTML = "";
     s.items.forEach(function (name) {
       if (Pixel.has(name)) { var e = Pixel.el(name, 22); e.title = name; els.statusItems.appendChild(e); }
     });
+    // the cat joins after the Marktplatz (#15)
+    var catAround = s.room >= 5 && !s.gameOver;
+    els.cat.classList.toggle("hidden", !catAround);
+    if (catAround && !els.cat.innerHTML) els.cat.innerHTML = Pixel.svg("cat", 32);
+    renderChips();
   }
 
   // ---------- travel ----------
@@ -204,7 +310,7 @@
     var loc = pendingRoom.location;
     var d = Geo.distance(lastPos, loc);
     var b = Geo.bearing(lastPos, loc);
-    els.travelDistance.textContent = Geo.formatDistance(d) + " away" +
+    els.travelDistance.textContent = Geo.formatDistance(d) + " to the " + compassName(b) +
       (lastPos.accuracy ? " (±" + Math.round(lastPos.accuracy) + " m)" : "");
     var rot = heading === null ? b : (b - heading);
     els.arrow.style.transform = "rotate(" + rot + "deg)";
@@ -262,13 +368,19 @@
         enqueue({ kind: ev.kind, text: ev.text });
         transcript.push({ kind: ev.kind, text: ev.text });
         break;
+      case "navhint":
+        enqueue({ kind: "system", text: navText(ev.room) });
+        break;
       case "travel":
         showTravel(ev.room);
         break;
       case "gameover":
+        hideTravel();
+        enqueue({ kind: "end", win: false }); // shows after the ghost finished talking (#1)
+        break;
       case "finished":
         hideTravel();
-        setTimeout(function () { openMenu(); }, 2500);
+        enqueue({ kind: "end", win: true });
         break;
     }
     renderStatus();
@@ -314,14 +426,15 @@
       "gps receiver ......... " + (navigator.geolocation ? "ok" : "missing"),
       "press any key. no wait. just read."
     ];
-    lines.forEach(function (l, i) { enqueue({ kind: "system", text: l, delay: i === lines.length - 1 ? 700 : 260 }); });
+    lines.forEach(function (l, i) { enqueue({ kind: "system", text: l, delay: i === lines.length - 1 ? 900 : 300 }); });
   }
 
-  els.btnNew.addEventListener("click", function () {
-    var dev = els.chkDev.checked;
+  function newGame() {
+    var dev = els.chkDev.checked || engine.state.devMode;
     flush();
     els.log.innerHTML = "";
     transcript = [];
+    pokes = 0;
     hideTravel();
     clearSave();
     boot();
@@ -331,7 +444,9 @@
     persist();
     closeMenu();
     els.input.focus();
-  });
+  }
+
+  els.btnNew.addEventListener("click", newGame);
 
   els.btnContinue.addEventListener("click", function () {
     var save = loadSave();
@@ -351,7 +466,7 @@
   // ---------- input ----------
   function feedback(cls) {
     els.inputRow.classList.remove("ok", "bad");
-    void els.inputRow.offsetWidth; // restart animation
+    void els.inputRow.offsetWidth;
     els.inputRow.classList.add(cls);
     setTimeout(function () { els.inputRow.classList.remove(cls); }, 700);
   }
@@ -366,15 +481,17 @@
     var s = engine.state;
     var after = s.room + ":" + s.step;
     var isCommand = /^(help|\?|hilfe|hint|tipp|clue|items|inventory|inv|i|look|l|repeat|where|wo|goto( .*)?)$/i.test(text.trim());
+    if (pendingRoom && !engine.needsTravel()) hideTravel(); // e.g. after goto
     if (s.gameOver) { setMood("angry"); Sfx.bad(); }
     else if (!isCommand && (after !== before || s.finished || s.items.length !== itemsBefore)) { feedback("ok"); setMood("happy"); Sfx.ok(); }
     else if (!isCommand && lastWasHint) { feedback("bad"); setMood("angry"); Sfx.bad(); }
     persist();
+    renderStatus();
     els.input.value = "";
   }
 
   els.form.addEventListener("submit", function (e) { e.preventDefault(); say(els.input.value.trim()); });
-  Array.prototype.forEach.call(document.querySelectorAll(".chip"), function (chip) {
+  Array.prototype.forEach.call(document.querySelectorAll(".chip:not(.chip-answer)"), function (chip) {
     chip.addEventListener("click", function () { say(chip.getAttribute("data-say")); els.input.focus(); });
   });
   els.log.addEventListener("click", function () { if (typing) typing.finish(); });

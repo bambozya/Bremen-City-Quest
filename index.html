@@ -25,7 +25,8 @@
     </div>
     <div id="statusItems" class="status-items" title="Items"></div>
     <span id="statusDev" class="badge hidden">DEV</span>
-    <div id="companion" class="companion" aria-hidden="true"></div>
+    <button id="cat" class="cat hidden" type="button" aria-label="The cat"></button>
+    <button id="companion" class="companion" type="button" aria-label="Poke the ghost"></button>
     <button id="btnMenu" class="btn-icon" type="button" aria-label="Menu and settings">≡</button>
   </header>
 
@@ -49,9 +50,8 @@
   <main id="log" class="log" aria-live="polite"></main>
 
   <footer class="footer">
-    <div class="quick">
-      <button class="chip" type="button" data-say="yes">Yes</button>
-      <button class="chip" type="button" data-say="no">No</button>
+    <div id="quick" class="quick">
+      <span id="quickAnswers" class="quick-answers"></span>
       <button class="chip" type="button" data-say="hint">Hint</button>
       <button class="chip" type="button" data-say="items">Items</button>
       <button class="chip" type="button" data-say="look">Look</button>

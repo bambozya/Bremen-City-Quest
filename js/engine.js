@@ -135,7 +135,6 @@
 
   Engine.prototype.finish = function () {
     this.state.finished = true;
-    this.emit({ kind: "system", text: "THE END — thank you for playing Bremen City Quest." });
     this.emit({ kind: "finished" });
   };
 
@@ -170,16 +169,27 @@
     return true;
   };
 
-  /* Repeat the pending question. */
+  /* Describe the situation: where you are, what you carry, and the current task. */
   Engine.prototype.look = function () {
+    var r = this.currentRoom();
     var step = this.currentStep();
+    var items = this.state.items.length ? "You carry: " + this.state.items.join(", ") + "." : "You carry nothing.";
     if (this.needsTravel()) {
-      this.emit({ kind: "travel", room: this.currentRoom() });
+      this.emit({ kind: "system", text: "On the way to point " + r.id + ": " + r.title + ". " + items });
+      this.emit({ kind: "navhint", room: r });
     } else if (step && step.type === "ask") {
+      this.emit({ kind: "system", text: "Point " + r.id + ": " + r.title + ". " + items });
       this.emit({ kind: "ghost", text: step.ghost, question: true });
     } else {
-      this.emit({ kind: "system", text: "Nothing to see here." });
+      this.emit({ kind: "system", text: items });
     }
+  };
+
+  /* The answers of the pending question, for quick-reply buttons. Empty if none. */
+  Engine.prototype.pendingAnswers = function () {
+    var step = this.currentStep();
+    if (this.needsTravel() || !step || step.type !== "ask" || this.state.gameOver || this.state.finished) return [];
+    return step.answers || [];
   };
 
   /* Handle a line of player input. Returns true if consumed. */
@@ -204,7 +214,11 @@
         "Commands: hint · items · look · where · help" + (s.devMode ? " · goto <n>" : "") });
       return true;
     }
-    if (cmd === "hint" || cmd === "tipp" || cmd === "clue") { if (!this.giveHint()) this.emit({ kind: "system", text: "No question is pending." }); return true; }
+    if (cmd === "hint" || cmd === "tipp" || cmd === "clue") {
+      if (this.needsTravel()) { this.emit({ kind: "navhint", room: this.currentRoom() }); return true; }
+      if (!this.giveHint()) this.emit({ kind: "system", text: "No question is pending." });
+      return true;
+    }
     if (cmd === "items" || cmd === "inventory" || cmd === "inv" || cmd === "i") {
       this.emit({ kind: "system", text: s.items.length ? "You carry: " + s.items.join(", ") : "You carry nothing." });
       return true;
@@ -226,7 +240,7 @@
 
     // --- travel gate ---
     if (this.needsTravel()) {
-      this.emit({ kind: "system", text: "You are not there yet. Follow the compass to " + this.currentRoom().location.label + "." });
+      this.emit({ kind: "navhint", room: this.currentRoom() });
       return true;
     }
 
@@ -244,7 +258,6 @@
       if (a.reply) this.emit({ kind: "ghost", text: a.reply });
       if (a.gameOver) {
         s.gameOver = true;
-        this.emit({ kind: "system", text: "GAME OVER. Try again?" });
         this.emit({ kind: "gameover" });
         return true;
       }

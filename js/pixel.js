@@ -18,6 +18,8 @@
     K: "#2b1d12", // hair
     S: "#6fcf97", // green
     b: "#6aa9ff",
+    C: "#f0a04b", // cat fur
+    c: "#b8702a", // cat stripes
     A: "#ff4d45", // arrow
     a: "#ffb3ae"  // arrow highlight
   };
@@ -128,16 +130,16 @@
     ],
     cat: [
       "............",
-      ".B........B.",
-      ".BB......BB.",
-      ".BBBBBBBBBB.",
-      ".BBBBBBBBBB.",
-      ".BYBBBBBBYB.",
-      ".BBBBPPBBBB.",
-      ".BBBBBBBBBB.",
-      "..BBBBBBBB..",
-      "..BBBBBBBB..",
-      "...BB..BB...",
+      ".C........C.",
+      ".CC......CC.",
+      ".CCCCCCCCCC.",
+      ".CCCCCCCCCC.",
+      ".CBCCCCCCBC.",
+      ".CCCCPPCCCC.",
+      ".CcCCCCCCcC.",
+      "..CCCCCCCC..",
+      "..CcCCCCcC..",
+      "...CC..CC...",
       "............"
     ],
     arrow: [

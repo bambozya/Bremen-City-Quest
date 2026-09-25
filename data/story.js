@@ -77,7 +77,7 @@ window.STORY = {
           type: "ask",
           ghost: "Alright, it might be of use for our journey. What should we do?",
           answers: [
-            { match: ["nothing", "do nothing", "leave", "ignore"], reply: "It would have been a useful tool for our next adventures. Next time you should take it into account.\n\nSuddenly you see a pig running towards you.\n\nWe should run as fast as we can to downtown. Do not turn around, I’ll shout when we are safe." },
+            { match: ["do nothing", "nothing", "leave", "ignore"], reply: "It would have been a useful tool for our next adventures. Next time you should take it into account.\n\nSuddenly you see a pig running towards you.\n\nWe should run as fast as we can to downtown. Do not turn around, I’ll shout when we are safe." },
             { match: ["steal", "take", "grab", "nehmen", "klauen"], item: "Horn", reply: "You steal the horn from the shepherd. He gets angry and chases you.\n\nYou are really good! We should run as fast as we can downtown. Do not turn around, I’ll shout when we are safe." }
           ],
           hints: ["Steal it? Take it? Or do nothing?"]
