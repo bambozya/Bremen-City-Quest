@@ -232,7 +232,9 @@ window.STORY = {
           hints: ["Don’t waste time, catch!", "C.A.T.C.H.!"]
         },
         { type: "ghost", text: "Good! Now let’s run back to the beginning of the street! Oh look, one of the craftsmen dropped a glass figure..." },
-        { type: "text", text: "You run to the beginning of the Böttcherstraße and stop before a golden portrait that appears at the entrance." },
+        { type: "text", text: "The bell is still warm in your hand. Behind you the street has gone quiet again; a few faces peek out of the doorways." },
+        { type: "ghost", text: "Catch your breath. Strange, isn’t it? A mirage that leaves something real behind. The cat said bells. I say: keep it close and keep walking." },
+        { type: "text", text: "You walk back to the beginning of the Böttcherstraße and stop before a golden portrait that appears at the entrance." },
         {
           type: "ask",
           ghost: "Look at this gold! Again a mirage! The gold smelts! Take it!",
@@ -334,7 +336,7 @@ window.STORY = {
             { match: ["no", "nein"], retry: true, reply: "I smell cats, it should be somewhere here." },
             { match: ["yes", "ja"] }
           ],
-          hints: ["I guess there is more than one cat on the sign. Yes or no?"]
+          hints: ["I smell cats, it should be somewhere here. Look for house number 38.", "More than one cat, painted on a sign above a door."]
         },
         {
           type: "ask",
@@ -348,7 +350,7 @@ window.STORY = {
           ghost: "It all makes sense now! We are the mice with which the cat is playing! What is the name of the building with the cats?",
           choices: ["Café Miau", "Katzen-Café", "Zum Schnurrhaar", "Samtpfote"],
           answers: [{ match: ["katzen", "katzencafe", "katzen-cafe", "cat cafe"] }],
-          hints: ["The name does not include the word ‘restaurant’.", "Maybe you ask a passer-by for glasses?"]
+          hints: ["Read the sign above the door at Schnoor 38. The name says exactly what you smelled.", "Cats are ‘Katzen’ in German. The rest is where you would drink a coffee."]
         },
         {
           type: "ask",
