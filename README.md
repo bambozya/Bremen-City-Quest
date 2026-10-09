@@ -43,10 +43,18 @@ To test on a phone, host the folder on any HTTPS static host (GitHub Pages works
 | 5 | Böttcherstraße | Haus des Glockenspiels |
 | 6 | Domsheide | Die Glocke |
 | 7 | Lange Wieren | St. Johann |
-| 8 | Schnoor | bakery |
+| 8 | Schnoor entrance | Klaben, Beck’s |
 | 9 | Schnoor | Katzen-Café (end of the beta story) |
 
 Coordinates in `data/story.js` are approximate and the radii (35–45 m) should be tuned on site. Only the *next* point is checked, so nearby points cannot be confused.
+
+## Tests
+
+```sh
+node test/playthrough.js
+```
+
+Checks every question's choices against its answers, plays the whole story headlessly, and covers hints, game over, travel gating and save/load.
 
 ## Editing the story
 

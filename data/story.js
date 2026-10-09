@@ -300,16 +300,10 @@ window.STORY = {
     },
     {
       id: 8,
-      title: "Schnoor – the bakery",
-      location: { lat: 53.07376, lng: 8.80999, radius: 35, label: "Schnoor entrance (bakery)" },
+      title: "Schnoor entrance",
+      location: { lat: 53.07376, lng: 8.80999, radius: 35, label: "Schnoor entrance" },
       steps: [
-        {
-          type: "ask",
-          ghost: "Look around for the thief. While you are looking, I can tell you more about this district. Here is a cake shop and bakery which sells a traditional Bremer winter bread. Can you find the bakery and find out its name?",
-          choices: ["Bremer Klabenhaus", "Schnaares Schnoor Bäckerei", "Konditorei Roland", "Schnoor-Kaffeehaus"],
-          answers: [{ match: ["schnaares", "schnaare", "schnoor baeckerei", "schnoor bakery"] }],
-          hints: ["The building should be grey.", "The name is on the sign on the top."]
-        },
+        { type: "ghost", text: "Look around for the thief. While you are looking, I can tell you more about this district. Somewhere around here they sell a traditional Bremer winter bread." },
         {
           type: "ask",
           ghost: "Since we are already here, we maybe should try this traditional winter bread. It is always baked in the beginning of December and enough to last till Easter. What is the name of this bread?",
