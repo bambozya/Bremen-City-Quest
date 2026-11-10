@@ -31,6 +31,17 @@
     return translated !== inp && re.test(translated);
   }
 
+  /* English engine strings; a localized story overrides them via story.ui (see js/i18n.js). */
+  var UI_DEFAULTS = {
+    banner: "— {title} —", reached: "You have reached: {title}",
+    gained: "You now carry: {item}", lost: "Lost: {item}",
+    help: "Answer the ghost with a keyword (e.g. 'yes', '9', 'Roland').\nCommands: hint · items · look · where · help · goto <n>",
+    noHint: "No hint this time. Think!", over: "The game is over. Start a new game from the menu.",
+    unknownPoint: "Unknown point.", jumped: "Jumped to point {n}", noQuestion: "No question is pending.",
+    carry: "You carry: {items}.", nothing: "You carry nothing.",
+    onWay: "On the way to point {id}: {title}. {items}", atPoint: "Point {id}: {title}. {items}", where: "Point {id}: {title}{label}"
+  };
+
   function Engine(story, emit) {
     this.story = story;
     this.emit = emit || function () {};
@@ -63,6 +74,21 @@
     return JSON.parse(JSON.stringify(this.state));
   };
 
+  /* UI string by key with {placeholders} filled, from story.ui or the English defaults. */
+  Engine.prototype.t = function (key, params) {
+    var s = (this.story.ui && this.story.ui[key]) || UI_DEFAULTS[key] || key;
+    return String(s).replace(/\{(\w+)\}/g, function (m, k) { return params && params[k] !== undefined ? params[k] : m; });
+  };
+
+  Engine.prototype.itemName = function (name) {
+    return (this.story.itemNames && this.story.itemNames[name]) || name;
+  };
+
+  Engine.prototype.itemList = function () {
+    var self = this;
+    return this.state.items.length ? this.t("carry", { items: this.state.items.map(function (n) { return self.itemName(n); }).join(", ") }) : this.t("nothing");
+  };
+
   Engine.prototype.currentRoom = function () {
     return this.story.rooms[this.state.room] || null;
   };
@@ -80,7 +106,7 @@
   /* Start a fresh game: emits the prologue up to the first question. */
   Engine.prototype.start = function () {
     this.reset();
-    this.emit({ kind: "system", text: "— " + this.story.title + " —" });
+    this.emit({ kind: "system", text: this.t("banner", { title: this.story.title }) });
     this.state.arrived = true;
     this.run();
   };
@@ -90,7 +116,7 @@
     if (!this.needsTravel()) return;
     var r = this.currentRoom();
     this.state.arrived = true;
-    this.emit({ kind: "system", text: "You have reached: " + r.title });
+    this.emit({ kind: "system", text: this.t("reached", { title: r.title }) });
     this.run();
   };
 
@@ -179,7 +205,7 @@
   Engine.prototype.addItem = function (name) {
     if (this.state.items.indexOf(name) === -1) {
       this.state.items.push(name);
-      this.emit({ kind: "item", text: "You now carry: " + name, item: name, gained: true });
+      this.emit({ kind: "item", text: this.t("gained", { item: this.itemName(name) }), item: name, gained: true });
     }
   };
 
@@ -187,7 +213,7 @@
     var i = this.state.items.indexOf(name);
     if (i !== -1) {
       this.state.items.splice(i, 1);
-      this.emit({ kind: "item", text: "Lost: " + name, item: name, gained: false });
+      this.emit({ kind: "item", text: this.t("lost", { item: this.itemName(name) }), item: name, gained: false });
     }
   };
 
@@ -199,7 +225,7 @@
     var step = this.currentStep();
     if (!step || step.type !== "ask") return false;
     var hints = step.hints || [];
-    if (!hints.length) { this.emit({ kind: "ghost", text: "No hint this time. Think!" }); return true; }
+    if (!hints.length) { this.emit({ kind: "ghost", text: this.t("noHint") }); return true; }
     var key = this.hintKey();
     var idx = this.state.hintIdx[key] || 0;
     this.emit({ kind: "ghost", text: hints[idx % hints.length], hint: true });
@@ -211,12 +237,12 @@
   Engine.prototype.look = function () {
     var r = this.currentRoom();
     var step = this.currentStep();
-    var items = this.state.items.length ? "You carry: " + this.state.items.join(", ") + "." : "You carry nothing.";
+    var items = this.itemList();
     if (this.needsTravel()) {
-      this.emit({ kind: "system", text: "On the way to point " + r.id + ": " + r.title + ". " + items });
+      this.emit({ kind: "system", text: this.t("onWay", { id: r.id, title: r.title, items: items }) });
       this.emit({ kind: "navhint", room: r });
     } else if (step && step.type === "ask") {
-      this.emit({ kind: "system", text: "Point " + r.id + ": " + r.title + ". " + items });
+      this.emit({ kind: "system", text: this.t("atPoint", { id: r.id, title: r.title, items: items }) });
       this.emit({ kind: "ghost", text: step.ghost, question: true });
     } else {
       this.emit({ kind: "system", text: items });
@@ -249,7 +275,7 @@
     this.emit({ kind: "player", text: text });
 
     if (s.gameOver || s.finished) {
-      this.emit({ kind: "system", text: "The game is over. Start a new game from the menu." });
+      this.emit({ kind: "system", text: this.t("over") });
       return true;
     }
 
@@ -258,31 +284,29 @@
 
     // --- commands ---
     if (cmd === "help" || cmd === "?" || cmd === "hilfe") {
-      this.emit({ kind: "system", text:
-        "Answer the ghost with a keyword (e.g. 'yes', '9', 'Roland').\n" +
-        "Commands: hint · items · look · where · help · goto <n>" });
+      this.emit({ kind: "system", text: this.t("help") });
       return true;
     }
     if (cmd === "hint" || cmd === "tipp" || cmd === "clue") {
       if (this.needsTravel()) { this.emit({ kind: "navhint", room: this.currentRoom() }); return true; }
-      if (!this.giveHint()) this.emit({ kind: "system", text: "No question is pending." });
+      if (!this.giveHint()) this.emit({ kind: "system", text: this.t("noQuestion") });
       return true;
     }
     if (cmd === "items" || cmd === "inventory" || cmd === "inv" || cmd === "i") {
-      this.emit({ kind: "system", text: s.items.length ? "You carry: " + s.items.join(", ") : "You carry nothing." });
+      this.emit({ kind: "system", text: this.itemList() });
       return true;
     }
     if (cmd === "look" || cmd === "l" || cmd === "repeat") { this.look(); return true; }
     if (cmd === "where" || cmd === "wo") {
       var r = this.currentRoom();
-      this.emit({ kind: "system", text: "Point " + r.id + ": " + r.title + (r.location ? " — " + r.location.label : "") });
+      this.emit({ kind: "system", text: this.t("where", { id: r.id, title: r.title, label: r.location ? " — " + r.location.label : "" }) });
       return true;
     }
     if (parts[0] === "goto") {
       var n = parseInt(parts[1], 10);
-      if (isNaN(n) || !this.story.rooms[n]) { this.emit({ kind: "system", text: "Unknown point." }); return true; }
+      if (isNaN(n) || !this.story.rooms[n]) { this.emit({ kind: "system", text: this.t("unknownPoint") }); return true; }
       s.room = n; s.step = 0; s.arrived = true; s.wrong = 0;
-      this.emit({ kind: "system", text: "Jumped to point " + n });
+      this.emit({ kind: "system", text: this.t("jumped", { n: n }) });
       this.run();
       return true;
     }

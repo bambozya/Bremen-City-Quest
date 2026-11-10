@@ -15,6 +15,7 @@ python3 -m http.server 8000
 
 To test on a phone, host the folder on any HTTPS static host (GitHub Pages works) or use a tunnel such as `ngrok`.
 
+- The game is in English and German. It picks the phone's language; switch any time under Settings, mid-game included.
 - Answer the ghost by tapping one of the options. A wrong option is crossed out and the ghost gives a hint.
 - Tap a message to skip the typing. Tap the ghost in the header to poke it.
 - Progress is saved automatically in the browser.
@@ -24,7 +25,9 @@ To test on a phone, host the folder on any HTTPS static host (GitHub Pages works
 
 | Path | Purpose |
 |------|---------|
-| `data/story.js` | All rooms, coordinates, questions, accepted answers, hints and items |
+| `data/story.js` | All rooms, coordinates, questions, accepted answers, hints and items (English) |
+| `data/story.de.js` | German texts, as an overlay on `story.js` with the same step order |
+| `js/i18n.js` | Interface strings per language and the overlay merge |
 | `js/engine.js` | Game logic: step machine, keyword matching, items, hints |
 | `js/geo.js` | Distance, bearing, GPS watching, compass heading |
 | `js/app.js` | UI, local-storage persistence, travel gating |
@@ -54,11 +57,13 @@ Coordinates in `data/story.js` are approximate and the radii (35–45 m) should 
 node test/playthrough.js
 ```
 
-Checks every question's choices against its answers, plays the whole story headlessly on both the honest and the thieving path, and covers hints, both endings, item branches, travel gating and save/load.
+Checks that the German overlay mirrors the English story step for step, checks every question's choices against its answers in both languages, plays the whole story headlessly on both the honest and the thieving path in both languages, and covers hints, both endings, item branches, travel gating and save/load.
 
 ## Editing the story
 
-Everything lives in `data/story.js`. Each room has `steps`; an `ask` step has `choices` (the buttons shown, 2–4 options), `answers` with accepted keywords (matched case-insensitively, umlauts folded, number words understood) and `hints` that cycle on wrong answers. A choice is correct when it matches one of the answers' keywords, so keep the two in sync. Answers can grant or remove items, set a flag, retry the question, or end the game (`gameOver`, with an optional `card` text).
+The structure lives in `data/story.js`, the German texts in `data/story.de.js`. When you add, remove or reorder a step, do it in both files; the test fails until they match again. Answer keywords (`match`) are shared, so a German choice label must contain one of them (umlauts are folded: ü → ue).
+
+Everything else lives in `data/story.js`. Each room has `steps`; an `ask` step has `choices` (the buttons shown, 2–4 options), `answers` with accepted keywords (matched case-insensitively, umlauts folded, number words understood) and `hints` that cycle on wrong answers. A choice is correct when it matches one of the answers' keywords, so keep the two in sync. Answers can grant or remove items, set a flag, retry the question, or end the game (`gameOver`, with an optional `card` text).
 
 Any step can be conditional with `ifItem`, `unlessItem`, `ifFlag` or `unlessFlag` (a name or a list); a step whose condition fails is skipped silently. When a step both removes an item and is followed by a fallback that checks for its absence, put the fallback first. `STORY.score` names the flags counted on the end card and the rank text for each count.
 

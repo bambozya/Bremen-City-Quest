@@ -31,14 +31,14 @@
     return "https://www.google.com/maps/dir/?api=1&destination=" + loc.lat + "," + loc.lng + "&travelmode=walking";
   }
 
-  /* Watches GPS. onPos({lat,lng,accuracy}), onErr(message). Returns stop(). */
+  /* Watches GPS. onPos({lat,lng,accuracy}), onErr(code) with code one of
+   * "unsupported" | "denied" | "unavailable" | "timeout". Returns stop(). */
   function watch(onPos, onErr) {
-    if (!navigator.geolocation) { onErr("Geolocation is not supported by this browser."); return function () {}; }
+    if (!navigator.geolocation) { onErr("unsupported"); return function () {}; }
     var id = navigator.geolocation.watchPosition(function (p) {
       onPos({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy });
     }, function (e) {
-      var msg = e.code === 1 ? "Location permission denied." : e.code === 2 ? "Position unavailable." : "Location timeout.";
-      onErr(msg);
+      onErr(e.code === 1 ? "denied" : e.code === 2 ? "unavailable" : "timeout");
     }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 });
     return function () { navigator.geolocation.clearWatch(id); };
   }

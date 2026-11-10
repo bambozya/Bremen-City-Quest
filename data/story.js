@@ -94,8 +94,8 @@ window.STORY = {
           ghost: "Alright. I had one like it when I was his age. That horn is more than a toy, it works on more than pigs, trust me. It might be of use for our journey. What should we do?",
           choices: ["Steal the horn", "Do nothing"],
           answers: [
-            { match: ["do nothing", "nothing", "leave", "ignore"], reply: "Do nothing. Of course. It would have been a useful tool for our next adventures. Next time you should take it into account.\n\nSuddenly you see a pig running towards you.\n\nWe should run as fast as we can to downtown. Do not turn around, I’ll shout when we are safe." },
-            { match: ["steal", "take", "grab", "nehmen", "klauen"], item: "Horn", flag: "stoleHorn", reply: "You steal the horn from the shepherd. He gets angry and chases you.\n\nYou are really good! We should run as fast as we can downtown. Do not turn around, I’ll shout when we are safe." }
+            { match: ["do nothing", "nothing", "leave", "ignore", "nichts tun", "nichts"], reply: "Do nothing. Of course. It would have been a useful tool for our next adventures. Next time you should take it into account.\n\nSuddenly you see a pig running towards you.\n\nWe should run as fast as we can to downtown. Do not turn around, I’ll shout when we are safe." },
+            { match: ["steal", "take", "grab", "nehmen", "klauen", "stehlen"], item: "Horn", flag: "stoleHorn", reply: "You steal the horn from the shepherd. He gets angry and chases you.\n\nYou are really good! We should run as fast as we can downtown. Do not turn around, I’ll shout when we are safe." }
           ],
           hints: ["Steal it? Take it? Or do nothing?"]
         },
@@ -384,8 +384,8 @@ window.STORY = {
           ghost: "He is giving it the bell! You should let me take control over your mind to fight the cat with your magic items. Give me control!",
           choices: ["Yes, take control", "Never!", "Hanswurst!"],
           answers: [
-            { match: ["yes", "take control", "control"], gameOver: true, card: "Hello, can you hear me?", reply: "Thank you. Finally.\n\nYour hands move without you. They push past the cat, take the bell from the old man, and ring it. The sound is small and wrong. The lane goes white, then grey, then nothing, and from very far away you hear your own voice say to a stranger: Hello, can you hear me?" },
-            { match: ["never", "nein", "no"], reply: "Never? NEVER? After everything I have done for you?" },
+            { match: ["yes", "take control", "control", "kontrolle", "uebernimm"], gameOver: true, card: "Hello, can you hear me?", reply: "Thank you. Finally.\n\nYour hands move without you. They push past the cat, take the bell from the old man, and ring it. The sound is small and wrong. The lane goes white, then grey, then nothing, and from very far away you hear your own voice say to a stranger: Hello, can you hear me?" },
+            { match: ["never", "nein", "no", "niemals"], reply: "Never? NEVER? After everything I have done for you?" },
             { match: ["hanswurst"], flag: "hanswurst", reply: "HANSWURST? I pour bells for a living, I have been dead six hundred years, and you call me HANSWURST?!" }
           ],
           hints: ["Come on, with its power I can save us! Really!", "Do you really want to hand your mind to a ghost? Maybe call it a name instead. A German one. Something with sausage."]

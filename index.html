@@ -33,14 +33,14 @@
     <div class="travel-row">
       <div class="compass"><div id="arrow" class="arrow" aria-hidden="true"></div></div>
       <div class="travel-info">
-        <div class="travel-label">▸ Go to</div>
+        <div class="travel-label" data-i18n="goTo">▸ Go to</div>
         <div id="travelTarget" class="travel-target">—</div>
         <div id="travelDistance" class="travel-distance">Waiting for GPS…</div>
         <div id="travelNote" class="travel-note"></div>
       </div>
     </div>
     <div class="travel-actions">
-      <a id="travelMaps" class="btn btn-secondary" href="#" target="_blank" rel="noopener">Maps</a>
+      <a id="travelMaps" class="btn btn-secondary" href="#" target="_blank" rel="noopener" data-i18n="maps">Maps</a>
       <button id="btnCompass" class="btn btn-secondary" type="button">Compass</button>
       <button id="btnTeleport" class="btn btn-dev" type="button">I’m here</button>
     </div>
@@ -59,27 +59,36 @@
         <span id="menuGhost" class="menu-ghost"></span>
         <div>
           <div class="menu-heading">BREMEN CITY QUEST</div>
-          <div class="menu-sub">a location-based text adventure</div>
+          <div class="menu-sub" data-i18n="menuSub">a location-based text adventure</div>
         </div>
       </div>
-      <button id="btnContinue" class="btn btn-primary hidden" type="button">▶ Continue</button>
-      <button id="btnNew" class="btn btn-primary" type="button">▶ New game</button>
-      <div class="menu-section">Settings</div>
+      <button id="btnContinue" class="btn btn-primary hidden" type="button" data-i18n="continueGame">▶ Continue</button>
+      <button id="btnNew" class="btn btn-primary" type="button" data-i18n="newGame">▶ New game</button>
+      <div class="menu-section" data-i18n="settings">Settings</div>
+      <div class="toggle toggle-stack">
+        <span data-i18n="language">Language</span>
+        <div id="langSwitch" class="seg" role="group" aria-label="Language / Sprache">
+          <button type="button" data-lang="en" lang="en">English</button>
+          <button type="button" data-lang="de" lang="de">Deutsch</button>
+        </div>
+      </div>
       <label class="toggle">
         <input id="chkSound" type="checkbox">
-        <span>Sound effects</span>
+        <span data-i18n="sound">Sound effects</span>
       </label>
       <label id="gotoRow" class="toggle toggle-stack">
-        <span>Jump to point</span>
+        <span data-i18n="jump">Jump to point</span>
         <select id="selGoto" class="select"></select>
       </label>
-      <p class="menu-help">Start in the city centre. Follow the compass to each point and answer the ghost by tapping one of the options. Tap a message to skip the typing.</p>
-      <button id="btnClose" class="btn btn-secondary" type="button">Close</button>
-      <p class="menu-credits">Original concept 2012: D. Davydenkova, S. Kozuhovskij, Y. Maslout, P. Szmidt.</p>
+      <p class="menu-help" data-i18n="help">Start in the city centre. Follow the compass to each point and answer the ghost by tapping one of the options. Tap a message to skip the typing.</p>
+      <button id="btnClose" class="btn btn-secondary" type="button" data-i18n="close">Close</button>
+      <p class="menu-credits" data-i18n="credits">Original concept 2012: D. Davydenkova, S. Kozuhovskij, Y. Maslout, P. Szmidt.</p>
     </div>
   </div>
 
   <script src="data/story.js"></script>
+  <script src="data/story.de.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/pixel.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/geo.js"></script>

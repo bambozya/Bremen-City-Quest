@@ -4,6 +4,7 @@
 
   var SAVE_KEY = "bcq.save.v1";
   var SOUND_KEY = "bcq.sound";
+  var LANG_KEY = "bcq.lang";
   var TYPE_MS = 14;          // ms per character, ghost lines
   var NARRATE_MS = 8;        // ms per character, narration
   var $ = function (id) { return document.getElementById(id); };
@@ -16,12 +17,22 @@
     travelDistance: $("travelDistance"), travelNote: $("travelNote"), travelMaps: $("travelMaps"),
     btnCompass: $("btnCompass"), btnTeleport: $("btnTeleport"),
     menu: $("menu"), btnMenu: $("btnMenu"), btnClose: $("btnClose"),
-    btnNew: $("btnNew"), btnContinue: $("btnContinue"), chkSound: $("chkSound")
+    btnNew: $("btnNew"), btnContinue: $("btnContinue"), chkSound: $("chkSound"), langSwitch: $("langSwitch")
   };
+
+  // ---------- language ----------
+  var lang = (function () {
+    try { var v = localStorage.getItem(LANG_KEY); if (v && I18N[v]) return v; } catch (e) { /* ignore */ }
+    return /^de/i.test(navigator.language || "") ? "de" : "en";
+  })();
+  function t(key, params) { var v = I18N[lang][key]; return typeof v === "string" ? i18nFormat(v, params) : v; }
+  function storyFor(l) { return localizeStory(window.STORY, l === "de" ? window.STORY_DE : null, I18N[l].engine); }
 
   var transcript = [];
   var stopGeo = null, lastPos = null, heading = null, pendingRoom = null;
   var reviewing = false; // travel panel reopened from the header for a point already entered
+  var geoError = null;
+  var compassState = "compass";   // last GPS error code, so the panel can be re-labelled on a language change
   var lastWasHint = false;
 
   // ---------- sound (tiny chiptune blips, off by default) ----------
@@ -166,19 +177,18 @@
     if (kind === "end") {
       var card = document.createElement("div");
       card.className = "msg msg-end pxbox" + (it.win ? " win" : "");
-      var t = document.createElement("div"); t.className = "end-title"; t.textContent = it.win ? "THE END" : "GAME OVER";
+      var title = document.createElement("div"); title.className = "end-title"; title.textContent = it.win ? t("theEnd") : t("gameOver");
       var sub = document.createElement("div"); sub.className = "end-sub";
-      sub.textContent = it.sub || (it.win ? "Thank you for playing Bremen City Quest." : "The ghost is not amused.");
+      sub.textContent = it.sub || (it.win ? t("thanks") : t("notAmused"));
       var sc = null;
       if (it.score && it.score.total) {
         sc = document.createElement("div"); sc.className = "end-score";
-        sc.textContent = (it.score.rank ? it.score.rank + " " : "") +
-          it.score.count + " of " + it.score.total + " times you took what the ghost told you to.";
+        sc.textContent = (it.score.rank ? it.score.rank + " " : "") + t("tally", { count: it.score.count, total: it.score.total });
       }
       var btn = document.createElement("button"); btn.type = "button"; btn.className = "btn btn-primary";
-      btn.textContent = it.win ? "▶ Play again" : "▶ Try again";
+      btn.textContent = it.win ? t("playAgain") : t("tryAgain");
       btn.addEventListener("click", newGame);
-      card.appendChild(t); card.appendChild(sub);
+      card.appendChild(title); card.appendChild(sub);
       if (sc) card.appendChild(sc);
       card.appendChild(btn);
       els.log.appendChild(card);
@@ -216,35 +226,25 @@
 
   // ---------- navigation help (#2, #3) ----------
   function compassName(b) {
-    var names = ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"];
-    return names[Math.round(b / 45) % 8];
+    return t("dirs")[Math.round(b / 45) % 8];
   }
 
   function navText(room) {
     var loc = room.location;
-    if (!lastPos) return "You are not there yet. Next stop: " + loc.label + ". Waiting for GPS — follow the arrow or open Maps.";
+    if (!lastPos) return t("navNoGps", { label: loc.label });
     var d = Geo.distance(lastPos, loc), b = Geo.bearing(lastPos, loc);
-    return "You are not there yet. " + loc.label + " is about " + Geo.formatDistance(d) + " to the " + compassName(b) + ". Follow the arrow.";
+    return t("navDist", { label: loc.label, dist: Geo.formatDistance(d), dir: compassName(b) });
   }
 
   // ---------- companion + cat (#13, #15) ----------
-  var REMARKS = [
-    "Boo. Just kidding.",
-    "Stop poking me. I’m transparent, not intangible. Wait…",
-    "I have been dead for six hundred years. I can wait. You can’t.",
-    "Focus. There is a question waiting.",
-    "Did you know Roland has a spare in the cellar? Neither did he.",
-    "If you see the cat, don’t trust it. Or do. I’m a ghost, not your mother.",
-    "Every time you poke me, a pig in the Sögestraße oinks.",
-    "Yes? Do I have something on my face? I don’t have a face."
-  ];
   var pokes = 0;
   els.companion.addEventListener("click", function () {
     if (typing || queue.length || pumpTimer) return; // no poking while the ghost is talking
     pokes++;
     var text;
-    if (pokes % 5 === 0) text = "Enough. I’m sulking now.";
-    else text = REMARKS[Math.floor(Math.random() * REMARKS.length)];
+    var remarks = t("remarks");
+    if (pokes % 5 === 0) text = t("sulking");
+    else text = remarks[Math.floor(Math.random() * remarks.length)];
     setMood(pokes % 5 === 0 ? "angry" : "happy");
     enqueue({ kind: "ghost", text: text });
   });
@@ -253,7 +253,7 @@
     if (typing || queue.length || pumpTimer) return;
     Sfx.meow();
     els.cat.classList.remove("happy"); void els.cat.offsetWidth; els.cat.classList.add("happy");
-    enqueue({ kind: "text", text: "The cat looks at you. Meow." });
+    enqueue({ kind: "text", text: t("catMeow") });
   });
 
   // ---------- status ----------
@@ -280,7 +280,7 @@
   function renderStatus() {
     var r = engine.currentRoom();
     var s = engine.state;
-    els.statusRoom.textContent = s.finished ? "The End" : r ? r.title : "—";
+    els.statusRoom.textContent = s.finished ? t("statusEnd") : r ? r.title : "—";
     els.statusRoom.classList.toggle("tappable", !!(r && r.location && !s.finished && !s.gameOver));
     var html = "";
     for (var i = 1; i < STORY.rooms.length; i++) {
@@ -303,11 +303,11 @@
   function showTravel(room, review) {
     pendingRoom = room;
     reviewing = !!review;
-    els.btnTeleport.textContent = review ? "Got it" : "I’m here";
+    els.btnTeleport.textContent = review ? t("gotIt") : t("here");
     els.travel.classList.remove("hidden");
     els.travelTarget.textContent = room.location.label;
     els.travelMaps.href = Geo.mapsUrl(room.location);
-    els.travelDistance.textContent = "Waiting for GPS…";
+    els.travelDistance.textContent = t("waitingGps");
     els.travelNote.textContent = "";
     startGeo();
     updateTravel();
@@ -326,13 +326,11 @@
     var loc = pendingRoom.location;
     var d = Geo.distance(lastPos, loc);
     var b = Geo.bearing(lastPos, loc);
-    els.travelDistance.textContent = Geo.formatDistance(d) + " to the " + compassName(b) +
+    els.travelDistance.textContent = t("distDir", { dist: Geo.formatDistance(d), dir: compassName(b) }) +
       (lastPos.accuracy ? " (±" + Math.round(lastPos.accuracy) + " m)" : "");
     var rot = heading === null ? b : (b - heading);
     els.arrow.style.transform = "rotate(" + rot + "deg)";
-    els.travelNote.textContent = heading === null
-      ? "Arrow points relative to north. Enable the compass."
-      : "Turn until the arrow points up.";
+    els.travelNote.textContent = heading === null ? t("arrowNorth") : t("turnUntil");
     var slack = Math.min(lastPos.accuracy || 0, 25);
     if (d <= loc.radius + slack) { if (reviewing) hideTravel(); else arrive(); }
   }
@@ -347,15 +345,17 @@
 
   function startGeo() {
     if (stopGeo) return;
-    stopGeo = Geo.watch(function (pos) { lastPos = pos; updateTravel(); }, function (msg) {
-      els.travelDistance.textContent = msg;
-      els.travelNote.textContent = "Use Maps to navigate, or tap “I’m here” when you arrive.";
+    stopGeo = Geo.watch(function (pos) { lastPos = pos; updateTravel(); }, function (code) {
+      geoError = code;
+      els.travelDistance.textContent = t("geo")[code] || code;
+      els.travelNote.textContent = t("useMaps");
     });
   }
 
   els.btnCompass.addEventListener("click", function () {
     Geo.watchHeading(function (h) { heading = h; updateTravel(); }).then(function (ok) {
-      els.btnCompass.textContent = ok ? "Compass on" : "No compass";
+      compassState = ok ? "compassOn" : "noCompass";
+      els.btnCompass.textContent = t(compassState);
       els.btnCompass.disabled = true;
     });
   });
@@ -363,7 +363,7 @@
   els.btnTeleport.addEventListener("click", function () {
     if (!pendingRoom) return;
     if (reviewing) { hideTravel(); return; }
-    enqueue({ kind: "system", text: "You say you are at: " + pendingRoom.location.label, instant: true });
+    enqueue({ kind: "system", text: t("youSayHere", { label: pendingRoom.location.label }), instant: true });
     arrive();
   });
 
@@ -403,7 +403,7 @@
     renderStatus();
   }
 
-  var engine = new Engine(window.STORY, onEmit);
+  var engine = new Engine(storyFor(lang), onEmit);
 
   // ---------- persistence ----------
   function persist() {
@@ -435,14 +435,10 @@
   });
 
   function boot() {
-    var lines = [
-      "BREMEN CITY QUEST v2.0",
-      "loading story ........ ok",
-      "ghost module ......... ok",
-      "gps receiver ......... " + (navigator.geolocation ? "ok" : "missing"),
-      "press any key. no wait. just read."
-    ];
-    lines.forEach(function (l, i) { enqueue({ kind: "system", text: l, delay: i === lines.length - 1 ? 900 : 300 }); });
+    var lines = t("boot");
+    lines.forEach(function (l, i) {
+      enqueue({ kind: "system", text: i18nFormat(l, { gps: navigator.geolocation ? t("gpsOk") : t("gpsMissing") }), delay: i === lines.length - 1 ? 900 : 300 });
+    });
   }
 
   function newGame() {
@@ -471,7 +467,7 @@
     transcript.forEach(function (m) { render({ kind: m.kind, text: m.text, hint: m.hint, item: m.item, gained: m.gained, instant: true }); });
     els.log.classList.remove("restoring");
     engine.load(save.state);
-    enqueue({ kind: "system", text: "— game resumed —", instant: true });
+    enqueue({ kind: "system", text: t("resumed"), instant: true });
     if (engine.needsTravel()) showTravel(engine.currentRoom());
     renderStatus();
     closeMenu();
@@ -515,12 +511,56 @@
   });
 
   // jump to a point from the menu
-  STORY.rooms.forEach(function (r) {
-    var o = document.createElement("option"); o.value = r.id; o.textContent = r.id + " · " + r.title; els.selGoto.appendChild(o);
-  });
+  function fillGoto() {
+    els.selGoto.innerHTML = "";
+    engine.story.rooms.forEach(function (r) {
+      var o = document.createElement("option"); o.value = r.id; o.textContent = r.id + " · " + r.title; els.selGoto.appendChild(o);
+    });
+  }
   els.selGoto.addEventListener("change", function () {
     closeMenu();
     say("goto " + els.selGoto.value);
+  });
+
+  // ---------- language switch ----------
+  /* Apply the current language to every static label, the travel panel and the point list. */
+  function applyLanguage() {
+    document.documentElement.lang = lang;
+    var nodes = document.querySelectorAll("[data-i18n]");
+    for (var i = 0; i < nodes.length; i++) nodes[i].textContent = t(nodes[i].getAttribute("data-i18n"));
+    els.statusRoom.title = t("showWay");
+    els.btnCompass.textContent = t(compassState);
+    els.btnTeleport.textContent = reviewing ? t("gotIt") : t("here");
+    if (pendingRoom) {
+      els.travelTarget.textContent = pendingRoom.location.label;
+      if (geoError) { els.travelDistance.textContent = t("geo")[geoError] || geoError; els.travelNote.textContent = t("useMaps"); }
+      else if (!lastPos) els.travelDistance.textContent = t("waitingGps");
+      else updateTravel();
+    }
+    var btns = els.langSwitch.querySelectorAll("button");
+    for (var j = 0; j < btns.length; j++) btns[j].classList.toggle("on", btns[j].getAttribute("data-lang") === lang);
+    fillGoto();
+    els.selGoto.value = engine.state.room;
+    renderStatus();
+  }
+
+  function setLanguage(l) {
+    if (!I18N[l] || l === lang) return;
+    lang = l;
+    try { localStorage.setItem(LANG_KEY, l); } catch (e) { /* ignore */ }
+    engine.story = storyFor(l);          // same state, new texts
+    if (pendingRoom) pendingRoom = engine.currentRoom();
+    applyLanguage();
+    enqueue({ kind: "system", text: t("langChanged"), instant: true });
+    var step = engine.currentStep();      // repeat the pending question in the new language
+    if (step && step.type === "ask" && !engine.needsTravel() && !engine.state.gameOver && !engine.state.finished) {
+      onEmit({ kind: "ghost", text: step.ghost, question: true });
+    }
+  }
+
+  els.langSwitch.addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-lang]");
+    if (b) setLanguage(b.getAttribute("data-lang"));
   });
 
   // ---------- boot ----------
@@ -528,6 +568,6 @@
   els.menuGhost.innerHTML = Pixel.svg("ghost", 40);
   els.arrow.innerHTML = Pixel.svg("arrow", 48);
   setMood("");
-  renderStatus();
+  applyLanguage();
   openMenu();
 })();
