@@ -86,13 +86,13 @@ assert(e4.load(snap) && e4.pendingChoices()[0].tried, "tried state survives save
 
 // 4. Finale branches: giving the ghost control is a game over with its own card; Hanswurst is remembered.
 var e5 = new Engine(STORY, function (ev) { out.push(ev); });
-e5.start(); e5.state.devMode = true; e5.input("goto 9");
+e5.start(); e5.input("goto 9");
 e5.input("yes"); e5.input("mouse"); e5.input("Katzen-Café"); e5.input("Yes, take control");
 var go = out[out.length - 1];
 assert(e5.state.gameOver && go.kind === "gameover" && go.card === "Hello, can you hear me?", "giving control ends the game with the loop card");
 
 var e6 = new Engine(STORY, function (ev) { out.push(ev); });
-e6.start(); e6.state.devMode = true; e6.input("goto 9");
+e6.start(); e6.input("goto 9");
 e6.input("yes"); e6.input("mouse"); e6.input("Katzen-Café"); e6.input("Hanswurst!");
 assert(e6.state.flags.hanswurst, "Hanswurst sets a flag");
 var texts6 = out.map(function (e) { return e.text || ""; }).join("\n");

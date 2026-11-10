@@ -10,17 +10,18 @@
 
   var els = {
     log: $("log"), choices: $("choices"), gotoRow: $("gotoRow"), selGoto: $("selGoto"),
-    statusRoom: $("statusRoom"), statusDev: $("statusDev"), statusItems: $("statusItems"),
+    statusRoom: $("statusRoom"), statusItems: $("statusItems"),
     progress: $("progress"), companion: $("companion"), cat: $("cat"), menuGhost: $("menuGhost"),
     travel: $("travel"), arrow: $("arrow"), travelTarget: $("travelTarget"),
     travelDistance: $("travelDistance"), travelNote: $("travelNote"), travelMaps: $("travelMaps"),
     btnCompass: $("btnCompass"), btnTeleport: $("btnTeleport"),
     menu: $("menu"), btnMenu: $("btnMenu"), btnClose: $("btnClose"),
-    btnNew: $("btnNew"), btnContinue: $("btnContinue"), chkDev: $("chkDev"), chkSound: $("chkSound")
+    btnNew: $("btnNew"), btnContinue: $("btnContinue"), chkSound: $("chkSound")
   };
 
   var transcript = [];
   var stopGeo = null, lastPos = null, heading = null, pendingRoom = null;
+  var reviewing = false; // travel panel reopened from the header for a point already entered
   var lastWasHint = false;
 
   // ---------- sound (tiny chiptune blips, off by default) ----------
@@ -280,8 +281,7 @@
     var r = engine.currentRoom();
     var s = engine.state;
     els.statusRoom.textContent = s.finished ? "The End" : r ? r.title : "—";
-    els.statusDev.classList.toggle("hidden", !s.devMode);
-    els.btnTeleport.classList.toggle("hidden", !s.devMode);
+    els.statusRoom.classList.toggle("tappable", !!(r && r.location && !s.finished && !s.gameOver));
     var html = "";
     for (var i = 1; i < STORY.rooms.length; i++) {
       var cls = i < s.room || s.finished ? "done" : i === s.room ? "now" : "";
@@ -300,8 +300,10 @@
   }
 
   // ---------- travel ----------
-  function showTravel(room) {
+  function showTravel(room, review) {
     pendingRoom = room;
+    reviewing = !!review;
+    els.btnTeleport.textContent = review ? "Got it" : "I’m here";
     els.travel.classList.remove("hidden");
     els.travelTarget.textContent = room.location.label;
     els.travelMaps.href = Geo.mapsUrl(room.location);
@@ -314,6 +316,7 @@
 
   function hideTravel() {
     pendingRoom = null;
+    reviewing = false;
     els.travel.classList.add("hidden");
     scrollLog();
   }
@@ -331,7 +334,7 @@
       ? "Arrow points relative to north. Enable the compass."
       : "Turn until the arrow points up.";
     var slack = Math.min(lastPos.accuracy || 0, 25);
-    if (d <= loc.radius + slack) arrive();
+    if (d <= loc.radius + slack) { if (reviewing) hideTravel(); else arrive(); }
   }
 
   function arrive() {
@@ -346,7 +349,7 @@
     if (stopGeo) return;
     stopGeo = Geo.watch(function (pos) { lastPos = pos; updateTravel(); }, function (msg) {
       els.travelDistance.textContent = msg;
-      els.travelNote.textContent = "Use Maps to navigate, or enable developer mode.";
+      els.travelNote.textContent = "Use Maps to navigate, or tap “I’m here” when you arrive.";
     });
   }
 
@@ -359,7 +362,8 @@
 
   els.btnTeleport.addEventListener("click", function () {
     if (!pendingRoom) return;
-    enqueue({ kind: "system", text: "[dev] teleported to " + pendingRoom.location.label, instant: true });
+    if (reviewing) { hideTravel(); return; }
+    enqueue({ kind: "system", text: "You say you are at: " + pendingRoom.location.label, instant: true });
     arrive();
   });
 
@@ -416,8 +420,6 @@
     var save = loadSave();
     var resumable = save && save.state && !save.state.finished && !save.state.gameOver;
     els.btnContinue.classList.toggle("hidden", !resumable);
-    els.chkDev.checked = !!engine.state.devMode;
-    els.gotoRow.classList.toggle("hidden", !engine.state.devMode);
     els.selGoto.value = engine.state.room;
     els.chkSound.checked = Sfx.get();
     els.menu.classList.remove("hidden");
@@ -426,7 +428,6 @@
 
   els.btnMenu.addEventListener("click", openMenu);
   els.btnClose.addEventListener("click", closeMenu);
-  els.chkDev.addEventListener("change", function () { engine.state.devMode = els.chkDev.checked; els.gotoRow.classList.toggle("hidden", !els.chkDev.checked); renderStatus(); persist(); });
   els.chkSound.addEventListener("change", function () {
     Sfx.set(els.chkSound.checked);
     try { localStorage.setItem(SOUND_KEY, els.chkSound.checked ? "1" : "0"); } catch (e) { /* ignore */ }
@@ -445,7 +446,6 @@
   }
 
   function newGame() {
-    var dev = els.chkDev.checked || engine.state.devMode;
     flush();
     els.log.innerHTML = "";
     transcript = [];
@@ -454,7 +454,6 @@
     clearSave();
     boot();
     engine.start();
-    engine.state.devMode = dev;
     renderStatus();
     persist();
     closeMenu();
@@ -507,12 +506,19 @@
 
   els.log.addEventListener("click", function () { if (typing) typing.finish(); });
 
-  // dev: jump to a point from the menu
+  // tap the point name in the header to see the compass again, e.g. after tapping “I’m here” too early
+  els.statusRoom.addEventListener("click", function () {
+    var r = engine.currentRoom();
+    if (!r || !r.location || engine.state.finished || engine.state.gameOver) return;
+    if (pendingRoom) { if (reviewing) hideTravel(); return; }
+    showTravel(r, true);
+  });
+
+  // jump to a point from the menu
   STORY.rooms.forEach(function (r) {
     var o = document.createElement("option"); o.value = r.id; o.textContent = r.id + " · " + r.title; els.selGoto.appendChild(o);
   });
   els.selGoto.addEventListener("change", function () {
-    if (!engine.state.devMode) return;
     closeMenu();
     say("goto " + els.selGoto.value);
   });
@@ -522,8 +528,6 @@
   els.menuGhost.innerHTML = Pixel.svg("ghost", 40);
   els.arrow.innerHTML = Pixel.svg("arrow", 48);
   setMood("");
-  var save = loadSave();
-  if (save && save.state) engine.state.devMode = !!save.state.devMode;
   renderStatus();
   openMenu();
 })();

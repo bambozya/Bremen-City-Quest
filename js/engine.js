@@ -48,8 +48,7 @@
       tried: {},
       wrong: 0,
       gameOver: false,
-      finished: false,
-      devMode: false
+      finished: false
     };
   };
 
@@ -86,7 +85,7 @@
     this.run();
   };
 
-  /* Called when the player reaches the current room (or teleports in dev mode). */
+  /* Called when the player reaches the current room (or taps “I’m here”). */
   Engine.prototype.arrive = function () {
     if (!this.needsTravel()) return;
     var r = this.currentRoom();
@@ -261,7 +260,7 @@
     if (cmd === "help" || cmd === "?" || cmd === "hilfe") {
       this.emit({ kind: "system", text:
         "Answer the ghost with a keyword (e.g. 'yes', '9', 'Roland').\n" +
-        "Commands: hint · items · look · where · help" + (s.devMode ? " · goto <n>" : "") });
+        "Commands: hint · items · look · where · help · goto <n>" });
       return true;
     }
     if (cmd === "hint" || cmd === "tipp" || cmd === "clue") {
@@ -279,11 +278,11 @@
       this.emit({ kind: "system", text: "Point " + r.id + ": " + r.title + (r.location ? " — " + r.location.label : "") });
       return true;
     }
-    if (parts[0] === "goto" && s.devMode) {
+    if (parts[0] === "goto") {
       var n = parseInt(parts[1], 10);
       if (isNaN(n) || !this.story.rooms[n]) { this.emit({ kind: "system", text: "Unknown point." }); return true; }
       s.room = n; s.step = 0; s.arrived = true; s.wrong = 0;
-      this.emit({ kind: "system", text: "[dev] Jumped to point " + n });
+      this.emit({ kind: "system", text: "Jumped to point " + n });
       this.run();
       return true;
     }

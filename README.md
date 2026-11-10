@@ -18,7 +18,7 @@ To test on a phone, host the folder on any HTTPS static host (GitHub Pages works
 - Answer the ghost by tapping one of the options. A wrong option is crossed out and the ghost gives a hint.
 - Tap a message to skip the typing. Tap the ghost in the header to poke it.
 - Progress is saved automatically in the browser.
-- **Developer mode** (menu): skips the GPS check with an *I'm here* button and adds a *Jump to point* dropdown.
+- GPS is a help, not a gate: when the travel panel shows and you are already at the point, tap *I'm here*. The menu also has a *Jump to point* dropdown.
 
 ## Structure
 

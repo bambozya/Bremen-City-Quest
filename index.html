@@ -20,11 +20,10 @@
   <header id="status" class="status">
     <img class="app-icon" src="assets/favicon.svg" alt="" width="32" height="32">
     <div class="status-left">
-      <div id="statusRoom" class="status-room">—</div>
+      <button id="statusRoom" class="status-room" type="button" title="Show the way to this point">—</button>
       <div id="progress" class="progress" aria-label="Progress"></div>
     </div>
     <div id="statusItems" class="status-items" title="Items"></div>
-    <span id="statusDev" class="badge hidden">DEV</span>
     <button id="cat" class="cat hidden" type="button" aria-label="The cat"></button>
     <button id="companion" class="companion" type="button" aria-label="Poke the ghost"></button>
     <button id="btnMenu" class="btn-icon" type="button" aria-label="Menu and settings">≡</button>
@@ -43,7 +42,7 @@
     <div class="travel-actions">
       <a id="travelMaps" class="btn btn-secondary" href="#" target="_blank" rel="noopener">Maps</a>
       <button id="btnCompass" class="btn btn-secondary" type="button">Compass</button>
-      <button id="btnTeleport" class="btn btn-dev hidden" type="button">I’m here</button>
+      <button id="btnTeleport" class="btn btn-dev" type="button">I’m here</button>
     </div>
   </section>
 
@@ -70,11 +69,7 @@
         <input id="chkSound" type="checkbox">
         <span>Sound effects</span>
       </label>
-      <label class="toggle">
-        <input id="chkDev" type="checkbox">
-        <span>Developer mode (skip GPS)</span>
-      </label>
-      <label id="gotoRow" class="toggle hidden">
+      <label id="gotoRow" class="toggle toggle-stack">
         <span>Jump to point</span>
         <select id="selGoto" class="select"></select>
       </label>
