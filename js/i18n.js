@@ -8,7 +8,7 @@
     en: {
       name: "English",
       menuSub: "a location-based text adventure",
-      continueGame: "▶ Continue", newGame: "▶ New game", settings: "Settings", sound: "Sound effects",
+      continueGame: "▶ Continue", newGame: "✦ New game", settings: "Settings", sound: "Sound effects",
       language: "Language", jump: "Jump to point", close: "Close",
       help: "Start in the city centre. Follow the compass to each point and answer the ghost by tapping one of the options. Tap a message to skip the typing.",
       credits: "Original concept 2012: D. Davydenkova, S. Kozuhovskij, Y. Maslout, P. Szmidt.",
@@ -23,7 +23,7 @@
       youSayHere: "You say you are at: {label}",
       geo: { unsupported: "Geolocation is not supported by this browser.", denied: "Location permission denied.", unavailable: "Position unavailable.", timeout: "Location timeout." },
       theEnd: "THE END", gameOver: "GAME OVER", thanks: "Thank you for playing Bremen City Quest.", notAmused: "The ghost is not amused.",
-      playAgain: "▶ Play again", tryAgain: "▶ Try again",
+      playAgain: "↻ Play again", tryAgain: "↻ Try again",
       tally: "{count} of {total} times you took what the ghost told you to.",
       statusEnd: "The End", showWay: "Show the way to this point",
       remarks: [
@@ -53,7 +53,7 @@
     de: {
       name: "Deutsch",
       menuSub: "ein ortsbasiertes Textabenteuer",
-      continueGame: "▶ Weiterspielen", newGame: "▶ Neues Spiel", settings: "Einstellungen", sound: "Soundeffekte",
+      continueGame: "▶ Weiterspielen", newGame: "✦ Neues Spiel", settings: "Einstellungen", sound: "Soundeffekte",
       language: "Sprache", jump: "Zu Punkt springen", close: "Schließen",
       help: "Starte in der Innenstadt. Folge dem Kompass zu jedem Punkt und antworte dem Geist, indem du eine der Optionen antippst. Tippe auf eine Nachricht, um das Tippen zu überspringen.",
       credits: "Originalkonzept 2012: D. Davydenkova, S. Kozuhovskij, Y. Maslout, P. Szmidt.",
@@ -68,7 +68,7 @@
       youSayHere: "Du sagst, du bist hier: {label}",
       geo: { unsupported: "Dieser Browser unterstützt keine Ortung.", denied: "Standortfreigabe verweigert.", unavailable: "Position nicht verfügbar.", timeout: "Zeitüberschreitung bei der Ortung." },
       theEnd: "ENDE", gameOver: "GAME OVER", thanks: "Danke, dass du Bremen City Quest gespielt hast.", notAmused: "Der Geist ist nicht amüsiert.",
-      playAgain: "▶ Noch einmal", tryAgain: "▶ Noch einmal versuchen",
+      playAgain: "↻ Noch einmal", tryAgain: "↻ Noch einmal versuchen",
       tally: "{count} von {total} Mal hast du genommen, was der Geist dir gesagt hat.",
       statusEnd: "Ende", showWay: "Weg zu diesem Punkt anzeigen",
       remarks: [
