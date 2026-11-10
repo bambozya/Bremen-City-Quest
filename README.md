@@ -6,6 +6,8 @@ This is a revival of *CityQuest*, a 2012 university project (Mobile Text Adventu
 
 ## Play
 
+The game is live at **https://bremen.maslout.fyi** (GitHub Pages, deployed from `main`; the domain is set in `CNAME`).
+
 Open `index.html` over HTTP (geolocation requires HTTPS or `localhost`):
 
 ```sh
