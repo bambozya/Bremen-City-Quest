@@ -5,17 +5,27 @@
  * Coordinates are approximate and should be verified on site.
  *
  * Step types:
- *   { type: "text",  text }                       narration
+ *   { type: "text",  text }                       narration (may carry item / removeItem / flag)
  *   { type: "ghost", text }                       the ghost speaks
- *   { type: "ask",   ghost, answers, hints }      a question the player must answer
+ *   { type: "ask",   ghost, choices, answers, hints }  a question the player must answer
  *
- * An answer: { match: [keywords], reply?, item?, removeItem?, retry?, gameOver? }
+ * Any step may be conditional: ifItem, unlessItem, ifFlag, unlessFlag (a name or a list).
+ * The step is skipped silently when a condition does not hold.
+ *
+ * An answer: { match: [keywords], reply?, item?, removeItem?, flag?, retry?, gameOver?, card? }
  *   retry    – print reply and ask the same question again (e.g. "No")
- *   gameOver – print reply and end the game
+ *   gameOver – print reply and end the game; `card` is the text on the game-over card
+ *   flag     – remember a choice that is not an item (checked with ifFlag / unlessFlag)
  * Unmatched input prints the next hint (hints cycle).
+ *
+ * `score` is shown on the end card: how many of the listed flags the player set.
  */
 window.STORY = {
   title: "Bremen City Quest",
+  score: {
+    flags: { stoleHorn: "the horn", tookGold: "the gold" },
+    ranks: ["An honest one. Rare.", "Half a thief. Bremen can live with that.", "A thief. Bremen has seen worse."]
+  },
   rooms: [
     {
       id: 0,
@@ -36,9 +46,10 @@ window.STORY = {
           hints: ["Just answer: yes or no."]
         },
         { type: "text", text: "Some people are looking suspiciously at you because you are talking to yourself, so you try to talk silently in your head with the Ghost." },
+        { type: "ghost", text: "Good. Then listen. I was a bell-founder’s apprentice in this city, in the foundry of Master Klinghe. A small bell went missing from that foundry, the one that was meant to call the free citizens of Bremen together. They say I took it. They hanged me for it. I have been wandering ever since, waiting for that bell to ring again." },
         {
           type: "ask",
-          ghost: "I’m a mighty ghost without a body and you are from the future Bremen. Maybe you can help me remove my curse and I will help you find your way back to the future. So, shall we do this?",
+          ghost: "I’m a mighty ghost without a body and you are from the future Bremen. Help me find the bell and make it ring, and I will help you find your way back to the future. So, shall we do this?",
           choices: ["Yes", "No"],
           answers: [
             { match: ["no", "nein"], gameOver: true, reply: "The voice starts to scream in an intolerable way. You put your head down and everything goes black." },
@@ -46,7 +57,7 @@ window.STORY = {
           ],
           hints: ["Yes or no? Choose wisely."]
         },
-        { type: "ghost", text: "I’m glad you want to cooperate. We should start our journey at the Sögestraße. Use a map to find out where it is or just ask people around you." }
+        { type: "ghost", text: "I’m glad you want to cooperate. Call me Hinrich. We should start our journey at the Sögestraße. I was a swineherd’s boy before the foundry took me, and that is where it all began. Use a map to find out where it is or just ask people around you." }
       ]
     },
     {
@@ -80,14 +91,15 @@ window.STORY = {
         },
         {
           type: "ask",
-          ghost: "Alright, it might be of use for our journey. What should we do?",
+          ghost: "Alright. I had one like it when I was his age. That horn is more than a toy, it works on more than pigs, trust me. It might be of use for our journey. What should we do?",
           choices: ["Steal the horn", "Do nothing"],
           answers: [
-            { match: ["do nothing", "nothing", "leave", "ignore"], reply: "It would have been a useful tool for our next adventures. Next time you should take it into account.\n\nSuddenly you see a pig running towards you.\n\nWe should run as fast as we can to downtown. Do not turn around, I’ll shout when we are safe." },
-            { match: ["steal", "take", "grab", "nehmen", "klauen"], item: "Horn", reply: "You steal the horn from the shepherd. He gets angry and chases you.\n\nYou are really good! We should run as fast as we can downtown. Do not turn around, I’ll shout when we are safe." }
+            { match: ["do nothing", "nothing", "leave", "ignore"], reply: "Do nothing. Of course. It would have been a useful tool for our next adventures. Next time you should take it into account.\n\nSuddenly you see a pig running towards you.\n\nWe should run as fast as we can to downtown. Do not turn around, I’ll shout when we are safe." },
+            { match: ["steal", "take", "grab", "nehmen", "klauen"], item: "Horn", flag: "stoleHorn", reply: "You steal the horn from the shepherd. He gets angry and chases you.\n\nYou are really good! We should run as fast as we can downtown. Do not turn around, I’ll shout when we are safe." }
           ],
           hints: ["Steal it? Take it? Or do nothing?"]
-        }
+        },
+        { type: "ghost", text: "Run to where the dead are. The old churchyard. Nobody chases you into a churchyard." }
       ]
     },
     {
@@ -116,8 +128,8 @@ window.STORY = {
           answers: [{ match: ["12", "twelve", "zwoelf"] }],
           hints: ["Just count the blossoms of the window.", "It is a dozen kind of number."]
         },
-        { type: "text", text: "Suddenly, a bright light comes out of the window and pervades you." },
-        { type: "ghost", text: "Yes, that’s what I wanted. Now I see our next move. We should go to the Dom.\n\nBy the way, the place here ‘Unser Lieben Frauen Kirchhof’ used to be the marketplace. In your time the marketplace is somewhere else. Close to the Dom there is the oldest church of Bremen. Let’s go to the Dom." }
+        { type: "text", text: "Suddenly, a bright light comes out of the window and pervades you. When your eyes clear, a thin line of it still hangs in the air, pointing across the roofs." },
+        { type: "ghost", text: "Yes, that’s what I wanted. The light points. Follow it, it leads to the Dom.\n\nBy the way, the place here ‘Unser Lieben Frauen Kirchhof’ used to be the marketplace. In your time the marketplace is somewhere else. Close to the Dom there is the oldest church of Bremen. Let’s go to the Dom." }
       ]
     },
     {
@@ -155,8 +167,8 @@ window.STORY = {
           hints: ["It looks different from the other stones.", "The stone is dark and larger than the other stones.", "People spit on it. ‘Spucken’ is the German word for that."]
         },
         { type: "ghost", text: "Yes, it is called Spuckstein, because passers-by should spit on it to show their aversion against the crimes of Gesche Gottfried." },
-        { type: "text", text: "You touch the scaffold and you feel the ghost becoming distracted." },
-        { type: "ghost", text: "Ehm, maybe we should go to the marketplace, I don’t understand why the rosette window led us to this cathedral in the first place." }
+        { type: "text", text: "You step closer to the stone and feel the ghost go quiet. For a moment the voice in your head sounds very far away." },
+        { type: "ghost", text: "They hanged me not far from here. No stone for me, no cross. Nobody spits. Never mind.\n\nThe great bell up in that tower is Klinghe’s work, the master I served. The one we are looking for is smaller, and it is not here. The marketplace, that is where this city hangs its bells. Go." }
       ]
     },
     {
@@ -200,7 +212,8 @@ window.STORY = {
           hints: ["The band consists of a donkey, a cock, a dog and a cat. You should recognize what is on top of the dog."]
         },
         { type: "ghost", text: "By the way cats are the favorite pets in Germany, they are very clean and considered very clever. Maybe we should talk to the cat." },
-        { type: "text", text: "You had a long talk with the cat, you had some milk, played ball and the cat recommended you to visit the Böttcherstraße." }
+        { type: "text", text: "You crouch by the bronze cat. It opens one eye, and a voice that is not the ghost’s speaks inside your head, dry and unhurried:\n\n“The bell he wants is hidden in a mirage, in the street of the bells. Follow the bells. And watch what he makes you take. I will be watching too.”" },
+        { type: "ghost", text: "Did it say anything? I only heard purring. Cats. The street of the bells, you say? Böttcherstraße. Bells. Let’s go." }
       ]
     },
     {
@@ -231,19 +244,22 @@ window.STORY = {
           answers: [{ match: ["catch", "fangen", "take", "grab"], item: "Bell" }],
           hints: ["Don’t waste time, catch!", "C.A.T.C.H.!"]
         },
-        { type: "ghost", text: "Good! Now let’s run back to the beginning of the street! Oh look, one of the craftsmen dropped a glass figure..." },
-        { type: "text", text: "The bell is still warm in your hand. Behind you the street has gone quiet again; a few faces peek out of the doorways." },
+        { type: "ghost", text: "Good! That’s it. That is the one, I would know it anywhere, I filed its lip myself. Hold it tight. Now let’s run back to the beginning of the street!" },
+        { type: "text", text: "The bell is small and bronze and still warm in your hand, not porcelain at all. Behind you the street has gone quiet again; a few faces peek out of the doorways." },
         { type: "ghost", text: "Catch your breath. Strange, isn’t it? A mirage that leaves something real behind. The cat said bells. I say: keep it close and keep walking." },
         { type: "text", text: "You walk back to the beginning of the Böttcherstraße and stop before a golden portrait that appears at the entrance." },
         {
           type: "ask",
-          ghost: "Look at this gold! Again a mirage! The gold smelts! Take it!",
+          ghost: "Look at this gold! Again a mirage! The gold smelts! Take it! Take it, we can use it!",
           choices: ["Leave it", "Take the gold", "Ask the crowd"],
-          answers: [{ match: ["take", "gold", "grab", "steal", "nehmen"], item: "Gold" }],
-          hints: ["Gold, take the gold!", "T.A.K.E. G.O.L.D.!"]
+          answers: [
+            { match: ["take", "gold", "grab", "steal", "nehmen"], item: "Gold", flag: "tookGold", reply: "Yes! Warm, isn’t it? Don’t think about where it came from." },
+            { match: ["leave", "leave it", "no", "lassen"], reply: "Leave it? Gold! Running down the wall like honey and you… fine. Fine. Your loss. Mine too." }
+          ],
+          hints: ["Gold, take the gold!", "The crowd won’t help you. Take it or leave it."]
         },
-        { type: "ghost", text: "The people around you are coming closer and they want the gold. We should continue. But why did the cat lead us this way? Böttcherstraße has many interesting buildings, you should explore it later." },
-        { type: "text", text: "As you talked to the cat it told you that you have to go to a place called Domsheide." }
+        { type: "ghost", text: "The people around you are coming closer and they want the gold. We should continue. Böttcherstraße has many interesting buildings, you should explore it later." },
+        { type: "text", text: "A grey shape winds once around your ankles. “Domsheide,” says the cat’s voice in your head, and the shape is gone." }
       ]
     },
     {
@@ -251,7 +267,7 @@ window.STORY = {
       title: "Domsheide / Die Glocke",
       location: { lat: 53.07487, lng: 8.80943, radius: 45, label: "Domsheide (Die Glocke)" },
       steps: [
-        { type: "text", text: "The cat explained that it feels something dangerous is going to happen if you don’t find your way back to the future very soon." },
+        { type: "text", text: "On the way the cat’s voice came back once more: something dangerous is going to happen if you don’t find your way back to the future very soon." },
         {
           type: "ask",
           ghost: "The cat is crazy. Don’t listen to it. Why are we here? Oh, here is a building that looks like a bell. What is the name of this building?",
@@ -267,8 +283,8 @@ window.STORY = {
           hints: ["This serves as a disguise.", "You can put it on your face."]
         },
         { type: "ghost", text: "Masks are there to hide faces. Beautiful buildings like the court house or the main post office are around the Domsheide area." },
-        { type: "text", text: "Suddenly somebody bumps into you and runs away. You look around and notice that the bell you had with you is now gone.", removeItem: "Bell" },
-        { type: "ghost", text: "Run, we have to get the thief!" }
+        { type: "text", text: "Suddenly somebody bumps into you: a man with a stick and a stiff leg, moving faster than a stiff leg should allow. He is gone around the corner before you can turn. You look down. The bell you had with you is gone.", removeItem: "Bell" },
+        { type: "ghost", text: "The bell! He took the BELL! Of everything you carry, the bell! Run, we have to get the thief! Into the Schnoor!" }
       ]
     },
     {
@@ -278,7 +294,7 @@ window.STORY = {
       steps: [
         {
           type: "ask",
-          ghost: "Ok, we should be near an old church, the thief should be somewhere here. Maybe we should take a look here? What is the name of the church?",
+          ghost: "Ok, we should be near an old church, the thief should be somewhere here. Bells. Everywhere bells. Maybe we should take a look here? What is the name of the church?",
           choices: ["St. Petri", "St. Martini", "St. Johann", "St. Ansgarii"],
           answers: [{ match: ["johann", "st johann", "st. johann", "johannis"] }],
           hints: ["I guess here somewhere should be the information... I think it started with St. J..."]
@@ -297,7 +313,10 @@ window.STORY = {
           answers: [{ match: ["weser"] }],
           hints: ["It is the only river crossing Bremen."]
         },
-        { type: "ghost", text: "Can you smell the water? Exciting, but we must first search the Schnoor to find the thief." }
+        { type: "ghost", ifItem: "Horn", text: "Can you smell the water? Exciting. Now, the horn. I said it works on more than pigs. Blow it. Go on." },
+        { type: "text", ifItem: "Horn", text: "You put the shepherd’s horn to your lips and blow. Nothing happens to the people. But from every windowsill and doorstep of the Schnoor, cats appear, a dozen, two dozen, and every one of them turns its head the same way: down the lane, towards the river. Somewhere in that direction a stick taps on cobbles, hurrying." },
+        { type: "ghost", ifItem: "Horn", text: "Told you. Where that many cats look, there is the one cat, and where the cat is, our thief will be. Follow them." },
+        { type: "ghost", unlessItem: "Horn", text: "Can you smell the water? Exciting. If we had that horn now I could… never mind. We search the Schnoor the slow way. First the thief." }
       ]
     },
     {
@@ -310,17 +329,23 @@ window.STORY = {
           type: "ask",
           ghost: "Since we are already here, we maybe should try this traditional winter bread. It is always baked in the beginning of December and enough to last till Easter. What is the name of this bread?",
           choices: ["Stuten", "Stollen", "Klaben", "Butterkuchen"],
-          answers: [{ match: ["klaben"], item: "Klaben" }],
+          answers: [{ match: ["klaben"] }],
           hints: ["I guess the name is mentioned at the store window.", "The name starts with a K."]
         },
+        /* The gift branch comes first: the buy branch removes the gold, which would otherwise enable the gift. */
+        { type: "text", unlessItem: "Gold", text: "You have no money of any century. The baker listens to your story about a ghost and a stolen bell, laughs, and gives you a piece of Klaben anyway. “For the road. You look like you need it.”", item: "Klaben" },
+        { type: "ghost", unlessItem: "Gold", text: "Charity. Hm. It would have been quicker with the gold." },
+        { type: "text", ifItem: "Gold", text: "You step into the bakery and put Hinrich’s gold on the counter. The baker bites it, frowns, shrugs, and hands you a Klaben wrapped in paper.", removeItem: "Gold", item: "Klaben" },
+        { type: "ghost", ifItem: "Gold", text: "See? Gold is useful. Who cares where it came from." },
         {
           type: "ask",
-          ghost: "Every Bremer says he owns the only and original recipe of this bread but all have the same tradition. Look, this woman dropped her Klaben. We take it to strengthen us... Oh there, the thief just ran across the Schnoor and turned left. There is a restaurant called after the local Bremen beer, he could be there. What is the name of that beer?",
+          ghost: "Every Bremer says he owns the only and original recipe of this bread but all have the same tradition. Oh there! The thief, stick and all, just crossed the lane and turned left. There is a restaurant called after the local Bremen beer, he could be there. What is the name of that beer?",
           choices: ["Jever", "Astra", "Beck’s", "Hemelinger"],
           answers: [{ match: ["beck", "becks", "beck's"] }],
           hints: ["The logo colors are green and white.", "Look for a logo with a green background and white words."]
         },
-        { type: "ghost", text: "Beck’s beer has been brewed in Bremen since 1873... Oh no, the buildings are transforming again, we should hurry up! Look, the thief is running down the street. Let us follow him!" }
+        { type: "text", text: "A waiter in the doorway shakes his head before you can ask. “The lame fellow? Ran past. Towards the cats, as always.”" },
+        { type: "ghost", text: "The cat. Of course. It was always the cat. Oh no, the buildings are transforming again, we should hurry up! Down the street, after him!" }
       ]
     },
     {
@@ -352,14 +377,46 @@ window.STORY = {
           answers: [{ match: ["katzen", "katzencafe", "katzen-cafe", "cat cafe"] }],
           hints: ["Read the sign above the door at Schnoor 38. The name says exactly what you smelled.", "Cats are ‘Katzen’ in German. The rest is where you would drink a coffee."]
         },
+        { type: "ghost", text: "I don’t remember a name like ‘Katzen-Café’ existing in my time. This building is also a mirage! Look, the cat from the marketplace. And the thief, sitting right beside it, with our bell!" },
+        { type: "text", text: "The man with the stick sits on the step beside the cat. He is old, grey-whiskered and harmless-looking, and very pleased with himself. The cat looks at you the way it looked at you on the marketplace." },
         {
           type: "ask",
-          ghost: "I don’t remember a name like ‘Katzen-Cafe’ existing in the Middle-Ages. This building is also a mirage! Look, the cat from the marketplace and the thief. The thief is giving it the stolen bell! You should let me take control over your mind to fight the cat with your magic items. Give me control!",
+          ghost: "He is giving it the bell! You should let me take control over your mind to fight the cat with your magic items. Give me control!",
           choices: ["Yes, take control", "Never!", "Hanswurst!"],
-          answers: [{ match: ["hanswurst"] }],
+          answers: [
+            { match: ["yes", "take control", "control"], gameOver: true, card: "Hello, can you hear me?", reply: "Thank you. Finally.\n\nYour hands move without you. They push past the cat, take the bell from the old man, and ring it. The sound is small and wrong. The lane goes white, then grey, then nothing, and from very far away you hear your own voice say to a stranger: Hello, can you hear me?" },
+            { match: ["never", "nein", "no"], reply: "Never? NEVER? After everything I have done for you?" },
+            { match: ["hanswurst"], flag: "hanswurst", reply: "HANSWURST? I pour bells for a living, I have been dead six hundred years, and you call me HANSWURST?!" }
+          ],
           hints: ["Come on, with its power I can save us! Really!", "Do you really want to hand your mind to a ghost? Maybe call it a name instead. A German one. Something with sausage."]
         },
-        { type: "text", text: "Mwahahaha, you cannot give the ghost control over your mind, so the story ends here. But maybe, one day you can find out what happened next." }
+        { type: "text", text: "The ghost screams. It is the scream from the very beginning, the one that turns everything black, and it is coming from inside your own head." },
+        { type: "text", ifItem: "Horn", text: "You put the horn to your lips and blow. The scream stops like a door slammed shut. Somewhere in the dark behind your eyes something small and furious is holding its ears." },
+        { type: "ghost", ifItem: "Horn", text: "Fine. FINE. I did say it works on more than pigs." },
+        { type: "text", unlessItem: "Horn", text: "Your knees go. The cobbles come up to meet you. The scream goes on and on, and you understand that it does not need to stop, that he can do this for six hundred years if he has to. Then the cat yowls, one long note that cuts through the scream like wire through clay, and the scream frays, thins, and is gone. You are on all fours in the Schnoor with the taste of blood where you bit your tongue. The cat licks a paw." },
+        { type: "ghost", unlessItem: "Horn", text: "…All right. All right. That was unnecessary. Of the cat, I mean." },
+        { type: "text", text: "The cat speaks, and this time the old man seems to hear it too.\n\n“Now you know what he is. Hinrich, apprentice, thief. He took the citizens’ bell from Klinghe’s foundry and hid it, and they hanged him before he could say where. I have kept it in a mirage ever since, out of his reach. It must ring in an honest living hand, here, where the rope-makers of the Schnoor once rang it to warn of thieves. Then he can rest, and you can go home.”" },
+        { type: "text", text: "You look at the man with the stick. “Heini,” says the cat. “Heini Holtenbeen. Lived at number 8, limped through this quarter his whole life and never stole anything but a laugh. The city keeps its useful dead. He runs my errands. He is also always hungry.”" },
+        { type: "text", unlessItem: "Klaben", text: "Heini holds out the bell with one hand. The other is open, palm up. You have nothing to put in it. He sighs, and puts the bell in your hand anyway. “Next time,” he says, “bring Klaben.”", item: "Bell" },
+        { type: "text", ifItem: "Klaben", text: "Heini holds out the bell with one hand. The other is open, palm up, and his eyes are on the paper parcel in your pocket. You give him the Klaben. He bites into it, closes his eyes, and puts the bell in your hand.", removeItem: "Klaben", item: "Bell" },
+        { type: "text", unlessFlag: ["stoleHorn", "tookGold"], text: "The cat looks at you for a long moment. “Twice he told you to take what was not yours. Twice you did not. An honest one. Rare. Ring it.”" },
+        { type: "text", ifFlag: "stoleHorn", unlessFlag: "tookGold", text: "The cat looks at you for a long moment. “You took the horn when he said take it. The gold you left. Half a thief. Bremen can live with that. Ring it.”" },
+        { type: "text", ifFlag: "tookGold", unlessFlag: "stoleHorn", text: "The cat looks at you for a long moment. “You left the horn, and took the gold when he said take it. Half a thief. Bremen can live with that. The gold was mirage gold, by the way. The baker’s till will hold a lump of coal by morning. Ring it.”" },
+        { type: "text", ifFlag: ["stoleHorn", "tookGold"], text: "The cat looks at you for a long moment. “Horn and gold. Both times he said take, you took. The gold was mirage gold, by the way; the baker’s till will hold a lump of coal by morning. Ring it anyway. Then go, before I change my mind.”" },
+        { type: "text", ifFlag: "hanswurst", text: "“Hanswurst,” the cat adds, “was a good choice of word.”" },
+        {
+          type: "ask",
+          ghost: "…Go on, then. Ring it. I would like to stop now.",
+          choices: ["Ring the bell", "Keep it"],
+          answers: [
+            { match: ["keep", "keep it", "behalten"], retry: true, reply: "Please." },
+            { match: ["ring", "ring the bell", "laeuten", "klingeln"] }
+          ],
+          hints: ["It is a bell. There is one thing you do with a bell."]
+        },
+        { type: "text", text: "You ring the bell. The sound is small and clear and completely right. The Katzen-Café, the lane, the sky above it ripple like water and go still again, and the old man and the cat are no longer there." },
+        { type: "ghost", text: "Thank you. I mean it, for once. I did take it. I was going to sell it. I was sixteen and stupid and then I was dead, and six hundred years is a long time to be sorry.\n\nGoodbye, future person. Spit on a stone for me." },
+        { type: "text", text: "The voice is gone. You wake up on the cobbles at Schnoor 38, today, phone in your hand, a bakery smell in the air. A few steps away, by the Concordenhaus, a bronze man with a stick is grinning at nothing in particular. In your pocket there is a small bronze bell that was not there this morning." }
       ]
     }
   ]

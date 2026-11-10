@@ -1,6 +1,17 @@
 # Story proposal: the curse, the cat, the items, the ending
 
-Draft for the author to mark up. Covers issues #7 (ending), #8 (ghost's goal and the thread between points) and #9 (item logic). Nothing here is in the game yet.
+Covers issues #7 (ending), #8 (ghost's goal and the thread between points) and #9 (item logic).
+
+**Status (2026-11-10): decided and implemented in `data/story.js`.** The author's decisions on the open questions:
+
+1. The ghost is **Hinrich**, a fictional apprentice in the historical Klinghe bell foundry of Bremen (Ghert Klinghe cast the Dom's "Gloriosa" in 1433). No documented Klinghe is accused of anything.
+2. **"Hanswurst!"** stays as an Easter egg. It refuses the ghost, offends him, and the cat comments on it.
+3. The horn has an **earlier use at St. Johann**: blowing it calls the cats of the Schnoor, who all look towards the thief.
+4. The year **1404 is not named** by the ghost. It stays only in the Marktplatz quiz text, where it always was.
+5. All quiz questions survive unchanged.
+6. The thief is **Heini Holtenbeen** (Jürgen Heinrich Keberle, 1835–1909, lived at Schnoor 8, bronze statue near the Concordenhaus) instead of the invented "Fiete". The cat explains the time jump in one line. Whether the statue lies on the walking line to the Katzen-Café is to be checked on site; the text only says it is "a few steps away".
+
+The original proposal follows. Where the implementation differs, the text above wins.
 
 The 2012 route and every quiz question stay as they are. What changes is the *why*: who the ghost is, what the cat wants, why the thief takes the bell, what the items are for, and how the player gets home.
 
@@ -58,7 +69,7 @@ You ring the bell. The mirage dissolves, Hinrich thanks you, honestly for once, 
 
 ## What the engine needs
 
-Three small additions, all backwards compatible:
+Three small additions, all backwards compatible (implemented):
 
 - `ifItem` / `unlessItem` on a step, so a step only plays when the player carries (or lacks) an item. Needed at point 8 (buy vs gift) and in the finale (horn vs cat).
 - `flag` on an answer and `ifFlag` on a step, to remember choices that are not items, such as "gave the Klaben to Fiete".

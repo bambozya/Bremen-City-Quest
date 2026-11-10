@@ -43,6 +43,7 @@
       step: 0,
       arrived: false,
       items: [],
+      flags: {},
       hintIdx: {},
       tried: {},
       wrong: 0,
@@ -94,6 +95,24 @@
     this.run();
   };
 
+  /* Conditions on a step: ifItem / unlessItem / ifFlag / unlessFlag, each a name or a list of
+   * names. The step only plays when every listed condition holds. */
+  Engine.prototype.stepAllowed = function (step) {
+    var s = this.state;
+    var list = function (v) { return v === undefined ? [] : Array.isArray(v) ? v : [v]; };
+    var has = function (n) { return s.items.indexOf(n) !== -1; };
+    var flag = function (n) { return !!(s.flags && s.flags[n]); };
+    return list(step.ifItem).every(has) && !list(step.unlessItem).some(has) &&
+      list(step.ifFlag).every(flag) && !list(step.unlessFlag).some(flag);
+  };
+
+  /* Effects shared by text steps and answers: item, removeItem, flag. */
+  Engine.prototype.applyEffects = function (o) {
+    if (o.removeItem) this.removeItem(o.removeItem);
+    if (o.item) this.addItem(o.item);
+    if (o.flag) this.setFlag(o.flag);
+  };
+
   /* Runs steps until a question is pending, a travel is required, or the game ends. */
   Engine.prototype.run = function () {
     var s = this.state;
@@ -114,10 +133,10 @@
         if (!this.currentRoom()) { this.finish(); return; }
         continue;
       }
+      if (!this.stepAllowed(step)) { s.step += 1; continue; }
       if (step.type === "text") {
         this.emit({ kind: "text", text: step.text });
-        if (step.removeItem) this.removeItem(step.removeItem);
-        if (step.item) this.addItem(step.item);
+        this.applyEffects(step);
         s.step += 1;
         continue;
       }
@@ -136,7 +155,26 @@
 
   Engine.prototype.finish = function () {
     this.state.finished = true;
-    this.emit({ kind: "finished" });
+    this.emit({ kind: "finished", score: this.score() });
+  };
+
+  /* Score from story.score: { flags: {name: label}, ranks: [text for 0 hits, 1 hit, ...] }.
+   * Returns null when the story defines no score. */
+  Engine.prototype.score = function () {
+    var def = this.story.score;
+    if (!def || !def.flags) return null;
+    var flags = this.state.flags || {}, hits = [], total = 0;
+    for (var name in def.flags) if (Object.prototype.hasOwnProperty.call(def.flags, name)) {
+      total += 1;
+      if (flags[name]) hits.push(def.flags[name]);
+    }
+    var ranks = def.ranks || [];
+    return { count: hits.length, total: total, hits: hits, rank: ranks[Math.min(hits.length, ranks.length - 1)] || "" };
+  };
+
+  Engine.prototype.setFlag = function (name) {
+    if (!this.state.flags) this.state.flags = {};
+    this.state.flags[name] = true;
   };
 
   Engine.prototype.addItem = function (name) {
@@ -270,12 +308,11 @@
       if (a.reply) this.emit({ kind: "ghost", text: a.reply });
       if (a.gameOver) {
         s.gameOver = true;
-        this.emit({ kind: "gameover" });
+        this.emit({ kind: "gameover", card: a.card || null });
         return true;
       }
       if (a.retry) return true;
-      if (a.item) this.addItem(a.item);
-      if (a.removeItem) this.removeItem(a.removeItem);
+      this.applyEffects(a);
       s.wrong = 0;
       s.step += 1;
       this.run();

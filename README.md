@@ -1,8 +1,8 @@
 # Bremen City Quest
 
-A location-based text adventure through the old town of Bremen. A ghost from the past guides you from the Sögestraße to the Schnoor; at each real-world point you answer questions about what you see and pick up items along the way.
+A location-based text adventure through the old town of Bremen. Hinrich, the ghost of a bell-founder’s apprentice, guides you from the Sögestraße to the Schnoor in search of a lost bell; at each real-world point you answer questions about what you see and pick up items along the way. The cat of the Stadtmusikanten is watching what you take.
 
-This is a revival of *CityQuest*, a 2012 university project (Mobile Text Adventure Games, SoSe 2012) originally built in C# for Windows Phone. The story is unchanged; the app is now a dependency-free mobile web app that runs on any phone.
+This is a revival of *CityQuest*, a 2012 university project (Mobile Text Adventure Games, SoSe 2012) originally built in C# for Windows Phone. The route and every quiz question are unchanged; the story around them was completed in 2026 with a real ending. The app is now a dependency-free mobile web app that runs on any phone.
 
 ## Play
 
@@ -44,7 +44,7 @@ To test on a phone, host the folder on any HTTPS static host (GitHub Pages works
 | 6 | Domsheide | Die Glocke |
 | 7 | Lange Wieren | St. Johann |
 | 8 | Schnoor entrance | Klaben, Beck’s |
-| 9 | Schnoor | Katzen-Café (end of the beta story) |
+| 9 | Schnoor | Katzen-Café, finale |
 
 Coordinates in `data/story.js` are approximate and the radii (35–45 m) should be tuned on site. Only the *next* point is checked, so nearby points cannot be confused.
 
@@ -54,11 +54,13 @@ Coordinates in `data/story.js` are approximate and the radii (35–45 m) should 
 node test/playthrough.js
 ```
 
-Checks every question's choices against its answers, plays the whole story headlessly, and covers hints, game over, travel gating and save/load.
+Checks every question's choices against its answers, plays the whole story headlessly on both the honest and the thieving path, and covers hints, both endings, item branches, travel gating and save/load.
 
 ## Editing the story
 
-Everything lives in `data/story.js`. Each room has `steps`; an `ask` step has `choices` (the buttons shown, 2–4 options), `answers` with accepted keywords (matched case-insensitively, umlauts folded, number words understood) and `hints` that cycle on wrong answers. A choice is correct when it matches one of the answers' keywords, so keep the two in sync. Answers can grant or remove items, retry the question, or end the game.
+Everything lives in `data/story.js`. Each room has `steps`; an `ask` step has `choices` (the buttons shown, 2–4 options), `answers` with accepted keywords (matched case-insensitively, umlauts folded, number words understood) and `hints` that cycle on wrong answers. A choice is correct when it matches one of the answers' keywords, so keep the two in sync. Answers can grant or remove items, set a flag, retry the question, or end the game (`gameOver`, with an optional `card` text).
+
+Any step can be conditional with `ifItem`, `unlessItem`, `ifFlag` or `unlessFlag` (a name or a list); a step whose condition fails is skipped silently. When a step both removes an item and is followed by a fallback that checks for its absence, put the fallback first. `STORY.score` names the flags counted on the end card and the rank text for each count.
 
 ## Credits
 

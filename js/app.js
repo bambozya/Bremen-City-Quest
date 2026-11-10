@@ -167,11 +167,19 @@
       card.className = "msg msg-end pxbox" + (it.win ? " win" : "");
       var t = document.createElement("div"); t.className = "end-title"; t.textContent = it.win ? "THE END" : "GAME OVER";
       var sub = document.createElement("div"); sub.className = "end-sub";
-      sub.textContent = it.win ? "Thank you for playing Bremen City Quest." : "The ghost is not amused.";
+      sub.textContent = it.sub || (it.win ? "Thank you for playing Bremen City Quest." : "The ghost is not amused.");
+      var sc = null;
+      if (it.score && it.score.total) {
+        sc = document.createElement("div"); sc.className = "end-score";
+        sc.textContent = (it.score.rank ? it.score.rank + " " : "") +
+          it.score.count + " of " + it.score.total + " times you took what the ghost told you to.";
+      }
       var btn = document.createElement("button"); btn.type = "button"; btn.className = "btn btn-primary";
       btn.textContent = it.win ? "▶ Play again" : "▶ Try again";
       btn.addEventListener("click", newGame);
-      card.appendChild(t); card.appendChild(sub); card.appendChild(btn);
+      card.appendChild(t); card.appendChild(sub);
+      if (sc) card.appendChild(sc);
+      card.appendChild(btn);
       els.log.appendChild(card);
       scrollLog();
       afterRender(0);
@@ -381,11 +389,11 @@
         break;
       case "gameover":
         hideTravel();
-        enqueue({ kind: "end", win: false }); // shows after the ghost finished talking (#1)
+        enqueue({ kind: "end", win: false, sub: ev.card || null }); // shows after the ghost finished talking (#1)
         break;
       case "finished":
         hideTravel();
-        enqueue({ kind: "end", win: true });
+        enqueue({ kind: "end", win: true, score: ev.score || null });
         break;
     }
     renderStatus();

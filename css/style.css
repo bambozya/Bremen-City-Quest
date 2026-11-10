@@ -129,6 +129,7 @@ body {
 .msg-end.win { --box: var(--gold); background: #2a2410; }
 .msg-end .end-title { font-family: var(--font-pixel); font-size: 14px; color: #fff; line-height: 1.6; }
 .msg-end .end-sub { color: var(--muted); font-size: .9em; }
+.msg-end .end-score { color: var(--gold); font-size: .9em; line-height: 1.5; }
 .msg-item .px { filter: drop-shadow(1px 1px 0 #000); }
 
 /* footer */
